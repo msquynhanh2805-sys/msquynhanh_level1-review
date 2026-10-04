@@ -56,12 +56,12 @@
     .btn-option:hover { background: #f1f1f1; }
 
     /* Sentence Puzzle */
-    .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
+    .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 8px; min-height: 65px; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
     .sentence-target { background: #fff; border: 2px dashed #bbb; align-items: center; }
     .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
     
-    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 12px; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
-    .word-chip span.py { font-size: 12px; color: #008a00; font-weight: bold; margin-top: 2px; }
+    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 12px; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; min-width: 42px; }
+    .word-chip span.py { font-size: 12px; color: #008a00; font-weight: bold; margin-top: 3px; }
 
     /* Typing Input */
     input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
@@ -348,28 +348,18 @@
     renderQuiz();
   }
 
-  // Hàm tách Pinyin thông minh kết hợp từ điển tra cứu
+  // Tách hoặc lấy Pinyin cho từng chữ Hán để đảm bảo 100% chữ nào cũng có Pinyin
   function getPinyinArray(sentence, rawPinyin) {
     let cleanSentence = cleanPunctuation(sentence);
     let chars = cleanSentence.split('');
-    let result = [];
-
     let pinyinWords = rawPinyin ? rawPinyin.trim().split(/\s+/) : [];
 
     if (pinyinWords.length === chars.length) {
       return pinyinWords;
     }
 
-    // Nếu không khớp độ dài, tự động tra cứu Pinyin theo từng chữ Hán
-    chars.forEach(char => {
-      if (vocabMap[char]) {
-        result.push(vocabMap[char]);
-      } else {
-        result.push(''); // Nếu không tìm thấy
-      }
-    });
-
-    return result;
+    // Nếu pinyin trong câu viết liền hoặc thiếu, tự tra Pinyin từng từ vựng
+    return chars.map(char => vocabMap[char] || '');
   }
 
   function renderQuiz() {
@@ -405,14 +395,13 @@
       area.appendChild(grid);
 
     } else if (activeSection === 2) {
-      // PHẦN 2: SẮP XẾP CÂU
+      // PHẦN 2: SẮP XẾP CÂU (LUÔN KÈM PINYIN CHO MỖI TỪ)
       document.getElementById('typeTag').innerText = "PHẦN 2: SẮP XẾP CÂU";
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
       document.getElementById('questionSub').innerText = "Bấm chọn từ để ghép thành câu tiếng Trung đúng:";
 
       let cleanSentence = cleanPunctuation(currentItem.example_cn);
       let cnWords = cleanSentence.split('');
-      
       let pyParts = getPinyinArray(currentItem.example_cn, currentItem.example_pinyin);
       
       let chips = cnWords.map((char, idx) => {
@@ -430,6 +419,7 @@
       chips.forEach((c) => {
         let chip = document.createElement('div');
         chip.className = 'word-chip';
+        // Luôn hiển thị chữ Hán và Pinyin bên dưới
         chip.innerHTML = `${c.hanzi}${c.pinyin ? `<span class="py">${c.pinyin}</span>` : ''}`;
         chip.onclick = () => {
           if (chip.parentElement.id === 'poolArea') targetArea.appendChild(chip);
@@ -439,10 +429,10 @@
       });
 
     } else if (activeSection === 3) {
-      // PHẦN 3: LUYỆN GÕ CÂU
+      // PHẦN 3: LUYỆN GÕ CÂU (KHÔNG HIỂN THỊ PINYIN HỌC VIÊN TỰ NHỚ)
       document.getElementById('typeTag').innerText = "PHẦN 3: LUYỆN GÕ CÂU";
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
-      document.getElementById('questionSub').innerText = `Gợi ý Pinyin: ${currentItem.example_pinyin}`;
+      document.getElementById('questionSub').innerText = "Hãy gõ lại câu tiếng Trung tương ứng (không có gợi ý Pinyin):";
 
       area.innerHTML = `
         <input type="text" id="typeInput" placeholder="Gõ câu chữ Hán vào đây..." autocomplete="off">
