@@ -7,6 +7,8 @@
 
   <!-- Thư viện đọc file Excel (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Thư viện tự động chuyển Chữ Hán sang Pinyin chuẩn 100% -->
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.3/dist/index.js"></script>
 
   <style>
     :root {
@@ -164,35 +166,20 @@
   let completedInRound = 0;
   let isAnswered = false;
 
-  // Loại bỏ tất cả dấu câu
+  // Xóa triệt để tất cả các loại dấu chấm, phẩy, hỏi, chấm tròn, ba chấm...
   function cleanPunctuation(str) {
     if (!str) return '';
-    return str.replace(/[。？！，、；：""''（）《》,.?!;: ]/g, '').trim();
+    return str.replace(/[。？！，、；：""''（）《》,.?!;:…\.\s]/g, '').trim();
   }
 
-  // Tách Pinyin thông minh tương ứng với số lượng chữ Hán
-  function parseSentenceChips(cnStr, pyStr) {
+  // Tách từng chữ Hán và lấy Pinyin chính xác 100% bằng thư viện pinyin-pro
+  function parseSentenceChips(cnStr) {
     let cleanCn = cleanPunctuation(cnStr);
     let cnChars = cleanCn.split('');
-    
-    // Tách pinyin theo khoảng trắng và lọc dấu câu
-    let rawPyTokens = (pyStr || '').replace(/[。？！，,.?!]/g, '').split(/\s+/).filter(Boolean);
-    let pyList = [];
 
-    // Nếu số cụm Pinyin khớp với số chữ Hán
-    if (rawPyTokens.length === cnChars.length) {
-      pyList = rawPyTokens;
-    } else {
-      // Trường hợp Pinyin ghép liền nhau (ví dụ: laoshi), phân bổ đều
-      let fullPy = rawPyTokens.join('');
-      let approxLen = Math.max(1, Math.floor(fullPy.length / cnChars.length));
-      for (let i = 0; i < cnChars.length; i++) {
-        if (i === cnChars.length - 1) {
-          pyList.push(fullPy.substring(i * approxLen));
-        } else {
-          pyList.push(fullPy.substring(i * approxLen, (i + 1) * approxLen));
-        }
-      }
+    let pyList = [];
+    if (window.pinyinPro && window.pinyinPro.pinyin) {
+      pyList = window.pinyinPro.pinyin(cleanCn, { type: 'array' });
     }
 
     return cnChars.map((char, idx) => ({
@@ -242,7 +229,7 @@
           lessonNum: parseInt(String(r['Bài'] || '').replace(/\D/g, '')) || 1,
           lessonStr: String(r['Bài'] || '').trim(),
           vocab: String(r['Từ'] || '').trim(),
-          pinyin: cleanPunctuation(String(r['Pinyin'] || '').trim()),
+          pinyin: String(r['Pinyin'] || '').trim(),
           meaning: String(r['Nghĩa tiếng Việt'] || '').trim(),
           example_vi: r['Ví dụ tiếng Việt'] ? String(r['Ví dụ tiếng Việt']).trim() : '',
           example_cn: r['Ví dụ tiếng Trung'] ? String(r['Ví dụ tiếng Trung']).trim() : '',
@@ -406,8 +393,7 @@
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
       document.getElementById('questionSub').innerText = "Bấm chọn từ để ghép thành câu tiếng Trung đúng:";
 
-      // Sử dụng hàm tách chữ Hán và Pinyin chuẩn xác
-      let chips = parseSentenceChips(currentItem.example_cn, currentItem.example_pinyin).sort(() => Math.random() - 0.5);
+      let chips = parseSentenceChips(currentItem.example_cn).sort(() => Math.random() - 0.5);
 
       area.innerHTML = `
         <div class="sentence-target" id="targetArea"></div>
@@ -501,7 +487,7 @@
     }
 
     isAnswered = true;
-    document.getElementById('actionBtn').innerText = 'Câu tiếp theo ➡️';
+    document.getElementById('actionBtn').innerText = 'Câu tiếp theo ➡️️';
   }
 
   function showSummaryReport() {
