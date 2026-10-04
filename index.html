@@ -14,7 +14,6 @@
       --primary-dark: #008a00;
       --secondary: #1cb0f6;
       --danger: #ff4b4b;
-      --warning: #ffc800;
       --gray-bg: #f7f7f7;
       --card-border: #e5e5e5;
       --text: #3c3c3c;
@@ -28,7 +27,7 @@
     h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 26px; }
     .subtitle { color: #666; font-size: 14px; font-weight: bold; }
 
-    /* Nav Tabs */
+    /* Nav Tabs cho 3 Phần Bài Tập */
     .section-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
     .tab-btn { flex: 1; padding: 12px 5px; border: 2px solid var(--card-border); background: var(--gray-bg); border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; color: #555; text-align: center; transition: all 0.2s; }
     .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
@@ -45,7 +44,7 @@
     .progress-container { width: 100%; background: #e5e5e5; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 20px; }
     .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
 
-    /* Question box */
+    /* Flashcard / Question box */
     .question-card { background: var(--gray-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; }
     .type-tag { display: inline-block; background: var(--secondary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
     .question-text { font-size: 22px; font-weight: bold; color: #111; margin: 10px 0; }
@@ -69,10 +68,10 @@
     input[type="text"]:focus { border-color: var(--secondary); }
 
     /* Buttons */
-    .btn-main { width: 100%; background: var(--primary); color: white; border: none; border-bottom: 4px solid var(--primary-dark); padding: 14px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 10px; }
+    .btn-main { width: 100%; background: var(--primary); color: white; border: none; border-bottom: 4px solid var(--primary-dark); padding: 14px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
     .btn-main:hover { background: #00a000; }
-    .btn-secondary { background: var(--secondary); border-bottom-color: #1181b8; }
-    .btn-secondary:hover { background: #1593cf; }
+    .btn-secondary { background: var(--secondary); border-color: #0b93d5; }
+    .btn-secondary:hover { background: #139ad9; }
 
     .hidden { display: none !important; }
     
@@ -80,14 +79,10 @@
     .feedback-box.correct { background: #d7ffb8; color: #2b7000; border: 2px solid #a5ed6e; }
     .feedback-box.wrong { background: #ffdfe0; color: #ea2b2b; border: 2px solid #ffc1c1; }
 
-    /* Summary Report UI */
-    .report-card { background: #f8f9fa; border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-    .stat-box { display: flex; justify-content: space-around; margin: 15px 0; text-align: center; }
-    .stat-item { background: white; padding: 12px 15px; border-radius: 12px; border: 1px solid #ddd; flex: 1; margin: 0 5px; }
-    .stat-num { font-size: 22px; font-weight: bold; color: var(--primary); }
-    .stat-label { font-size: 12px; color: #666; margin-top: 3px; }
-    .mistake-list { text-align: left; background: #fff; padding: 12px 15px; border-radius: 10px; border: 1px solid #eee; max-height: 180px; overflow-y: auto; font-size: 14px; }
-    .mistake-item { padding: 5px 0; border-bottom: 1px dashed #eee; color: #d93025; }
+    /* Bảng báo cáo phân tích */
+    .report-card { background: #f8f9fa; border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; margin: 15px 0; text-align: left; }
+    .report-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ddd; font-weight: bold; }
+    .wrong-item { background: #fff0f0; border-left: 4px solid var(--danger); padding: 8px 12px; margin-top: 6px; border-radius: 4px; font-size: 14px; }
 
     #loading { text-align: center; font-size: 18px; color: #666; padding: 40px 0; }
   </style>
@@ -103,14 +98,14 @@
   <div id="loading">⏳ Đang tải dữ liệu từ file <b>HSK1_flashcards_theo_bai.xlsx</b>...</div>
 
   <div id="app" class="hidden">
-    <!-- 3 Tab Bài Tập -->
+    <!-- Chọn 1 trong 3 Phần bài tập -->
     <div class="section-tabs">
       <button class="tab-btn active" id="tab1" onclick="switchSection(1)">1. Ôn Từ Vựng</button>
       <button class="tab-btn" id="tab2" onclick="switchSection(2)">2. Sắp Xếp Câu</button>
       <button class="tab-btn" id="tab3" onclick="switchSection(3)">3. Luyện Gõ Câu</button>
     </div>
 
-    <!-- Tùy chọn bài học -->
+    <!-- Tùy chọn bài học linh hoạt -->
     <div class="filter-card">
       <div style="font-weight: bold; margin-bottom: 5px;">🎯 Chọn bài học:</div>
       <div class="filter-row">
@@ -120,10 +115,12 @@
           <option value="all">Tất cả bài (Bài 1 - 30)</option>
         </select>
 
+        <!-- Khung chọn 1 bài -->
         <span id="singleSelectBox">
           <select id="singleLessonSelect" onchange="startRound()"></select>
         </span>
 
+        <!-- Khung chọn tùy chỉnh dải bài -->
         <span id="rangeSelectBox" class="hidden">
           Từ Bài <input type="number" id="startLesson" value="1" min="1" max="30">
           đến Bài <input type="number" id="endLesson" value="2" min="1" max="30">
@@ -158,6 +155,8 @@
 <script>
   let rawData = [];
   let currentQueue = [];
+  let mistakeQueue = [];
+  let recordHistory = []; // Lưu lịch sử để phục vụ bảng phân tích
   let currentItem = null;
   let activeSection = 1; // 1: Ôn từ, 2: Xếp câu, 3: Luyện gõ
   let hearts = 5;
@@ -165,10 +164,13 @@
   let completedInRound = 0;
   let isAnswered = false;
 
-  // Biến thống kê báo cáo
-  let stats = { correctFirstTry: 0, wrongCount: 0, mistakes: [] };
+  // Hàm loại bỏ tất cả dấu câu
+  function cleanPunctuation(str) {
+    if (!str) return '';
+    return str.replace(/[。？！，、；：""''（）《》,.?!;: ]/g, '').trim();
+  }
 
-  // Âm thanh
+  // Web Audio Synth
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -193,23 +195,7 @@
     }
   }
 
-  // Phát âm Tiếng Trung
-  function speakChinese(text) {
-    if ('speechSynthesis' in window) {
-      const msg = new SpeechSynthesisUtterance(text);
-      msg.lang = 'zh-CN';
-      window.speechSynthesis.speak(msg);
-    }
-  }
-
-  // Hàm loại bỏ tất cả dấu câu (Punctuation Clean)
-  function cleanPunctuation(text) {
-    if (!text) return '';
-    // Loại bỏ dấu câu tiếng Trung và tiếng Anh, khoảng trắng thừa
-    return text.replace(/[。？！，,.?!、;:""''（）\s]/g, '').toLowerCase().trim();
-  }
-
-  // Tải Excel
+  // Tải file Excel
   window.onload = function() {
     fetch('HSK1_flashcards_theo_bai.xlsx')
       .then(res => {
@@ -255,14 +241,15 @@
     });
   }
 
-  // Chuyển Tab (Phần 1, 2, 3)
+  // Chuyển đổi giữa 3 Phần Bài Tập
   function switchSection(sec) {
     activeSection = sec;
     document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
       if (idx + 1 === sec) btn.classList.add('active');
       else btn.classList.remove('active');
     });
-    // Tải lại bài tập ngay lập tức
+    // Phải reset giao diện để chuyển câu hỏi ngay lập tức
+    resetQuizAreaUI();
     startRound();
   }
 
@@ -270,9 +257,24 @@
     const mode = document.getElementById('modeSelect').value;
     document.getElementById('singleSelectBox').className = mode === 'single' ? '' : 'hidden';
     document.getElementById('rangeSelectBox').className = mode === 'range' ? '' : 'hidden';
+    resetQuizAreaUI();
     startRound();
   }
 
+  function resetQuizAreaUI() {
+    document.getElementById('quizArea').innerHTML = `
+      <div class="question-card">
+        <span class="type-tag" id="typeTag">Loại bài tập</span>
+        <div class="question-text" id="questionTitle">Nội dung</div>
+        <div class="sub-text" id="questionSub">Hướng dẫn</div>
+      </div>
+      <div id="interactiveArea"></div>
+      <div id="feedback" class="feedback-box hidden"></div>
+      <button class="btn-main" id="actionBtn" onclick="handleAction()">Kiểm tra</button>
+    `;
+  }
+
+  // Lọc bài tập và bắt đầu
   function startRound() {
     const mode = document.getElementById('modeSelect').value;
     let filtered = [];
@@ -292,6 +294,7 @@
       label = `Tất cả 30 Bài`;
     }
 
+    // Nếu chọn phần 2 hoặc phần 3 thì lọc loại bỏ các câu không có ví dụ
     if (activeSection === 2 || activeSection === 3) {
       filtered = filtered.filter(i => i.example_cn && i.example_vi);
     }
@@ -299,30 +302,17 @@
     document.getElementById('currentModeLabel').innerText = label;
 
     if (filtered.length === 0) {
-      alert("Không tìm thấy dữ liệu từ vựng/ví dụ cho bài học này!");
+      alert("⚠️️ Không tìm thấy dữ liệu bài tập thích hợp cho phần này!");
       return;
     }
 
-    currentQueue = [...filtered].sort(() => Math.random() - 0.5);
+    currentQueue = filtered.sort(() => Math.random() - 0.5);
+    mistakeQueue = [];
+    recordHistory = [];
     totalInRound = currentQueue.length;
     completedInRound = 0;
     hearts = 5;
-    stats = { correctFirstTry: 0, wrongCount: 0, mistakes: [] };
-
     document.getElementById('heartCount').innerText = hearts;
-    
-    // Khôi phục khu vực Quiz nếu đang hiện bảng điểm
-    document.getElementById('quizArea').innerHTML = `
-      <div class="question-card">
-        <span class="type-tag" id="typeTag">Loại bài tập</span>
-        <div class="question-text" id="questionTitle">Nội dung</div>
-        <div class="sub-text" id="questionSub">Hướng dẫn</div>
-      </div>
-      <div id="interactiveArea"></div>
-      <div id="feedback" class="feedback-box hidden"></div>
-      <button class="btn-main" id="actionBtn" onclick="handleAction()">Kiểm tra</button>
-    `;
-
     updateProgress();
     nextQuestion();
   }
@@ -342,7 +332,7 @@
     if (actionBtn) actionBtn.innerText = 'Kiểm tra';
 
     if (currentQueue.length === 0) {
-      renderSummaryReport();
+      showSummaryReport();
       return;
     }
 
@@ -352,6 +342,7 @@
 
   function renderQuiz() {
     const area = document.getElementById('interactiveArea');
+    if (!area) return;
     area.innerHTML = '';
 
     if (activeSection === 1) {
@@ -388,9 +379,9 @@
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
       document.getElementById('questionSub').innerText = "Bấm chọn từ để ghép thành câu tiếng Trung đúng:";
 
-      let cleanSentence = cleanPunctuation(currentItem.example_cn);
-      let cnWords = cleanSentence.split('');
-      let pyWords = currentItem.example_pinyin.split(' ');
+      let cleanCn = cleanPunctuation(currentItem.example_cn);
+      let cnWords = cleanCn.split('');
+      let pyWords = currentItem.example_pinyin ? currentItem.example_pinyin.split(' ') : [];
 
       let chips = cnWords.map((char, idx) => ({
         hanzi: char,
@@ -408,7 +399,7 @@
       chips.forEach((c) => {
         let chip = document.createElement('div');
         chip.className = 'word-chip';
-        chip.innerHTML = `${c.hanzi} <span class="py">${c.pinyin}</span>`;
+        chip.innerHTML = `${c.hanzi} ${c.pinyin ? `<span class="py">${c.pinyin}</span>` : ''}`;
         chip.onclick = () => {
           if (chip.parentElement.id === 'poolArea') targetArea.appendChild(chip);
           else poolArea.appendChild(chip);
@@ -420,10 +411,10 @@
       // PHẦN 3: LUYỆN GÕ CÂU
       document.getElementById('typeTag').innerText = "PHẦN 3: LUYỆN GÕ CÂU";
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
-      document.getElementById('questionSub').innerText = `Gợi ý Pinyin: ${currentItem.example_pinyin}`;
+      document.getElementById('questionSub').innerText = "Gõ câu tiếng Trung bằng bàn phím Pinyin:";
 
       area.innerHTML = `
-        <input type="text" id="typeInput" placeholder="Gõ câu chữ Hán vào đây (Không cần nhập dấu câu)..." autocomplete="off">
+        <input type="text" id="typeInput" placeholder="Gõ chữ Hán vào đây..." autocomplete="off">
       `;
     }
   }
@@ -456,93 +447,103 @@
     } else if (activeSection === 2) {
       const userSentence = Array.from(document.getElementById('targetArea').children)
         .map(el => el.childNodes[0].textContent.trim()).join('');
-      
-      const targetClean = cleanPunctuation(currentItem.example_cn);
-      isCorrect = (cleanPunctuation(userSentence) === targetClean);
+      const cleanTarget = cleanPunctuation(currentItem.example_cn);
+      isCorrect = (cleanPunctuation(userSentence) === cleanTarget);
       correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
     } else if (activeSection === 3) {
       const val = document.getElementById('typeInput').value;
-      const targetClean = cleanPunctuation(currentItem.example_cn);
-      isCorrect = (cleanPunctuation(val) === targetClean);
-      correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
+      const cleanTarget = cleanPunctuation(currentItem.example_cn);
+      isCorrect = (cleanPunctuation(val) === cleanTarget);
+      correctAnswerText = currentItem.example_cn;
     }
+
+    // Ghi lịch sử kết quả
+    recordHistory.push({
+      item: currentItem,
+      isCorrect: isCorrect,
+      correctText: correctAnswerText
+    });
 
     const feedback = document.getElementById('feedback');
     feedback.classList.remove('hidden');
 
     if (isCorrect) {
       playSound('correct');
-      if (activeSection !== 1) speakChinese(currentItem.example_cn);
-      else speakChinese(currentItem.vocab);
-
       feedback.className = 'feedback-box correct';
       feedback.innerHTML = '🎉 Chính xác! Bạn làm xuất sắc lắm!';
-      stats.correctFirstTry++;
     } else {
       playSound('wrong');
       hearts--;
-      stats.wrongCount++;
-      stats.mistakes.push(currentItem);
-      
       document.getElementById('heartCount').innerText = Math.max(0, hearts);
       feedback.className = 'feedback-box wrong';
       feedback.innerHTML = `❌ Chưa chính xác!<br><small>Đáp án đúng: <b>${correctAnswerText}</b></small>`;
+      mistakeQueue.push(currentItem);
     }
 
     isAnswered = true;
     document.getElementById('actionBtn').innerText = 'Câu tiếp theo ➡️';
   }
 
-  // BẢNG PHÂN TÍCH ĐÁNH GIÁ KẾT QUẢ CỦA BÀI
-  function renderSummaryReport() {
-    const accuracy = totalInRound > 0 ? Math.round((stats.correctFirstTry / totalInRound) * 100) : 0;
-    
-    let evaluation = "⭐ Hoàn thành bài học!";
-    if (accuracy === 100) evaluation = "🏆 Xuất sắc! Bạn trả lời đúng 100%!";
-    else if (accuracy >= 80) evaluation = "🌟 Rất tốt! Bạn nắm bài rất vững!";
-    else if (accuracy >= 50) evaluation = "👍 Khá tốt! Hãy ôn lại các câu sai nhé!";
-    else evaluation = "💪 Cố gắng lên! Ôn tập lại để nhớ lâu hơn nhé!";
+  // Bảng phân tích đánh giá chi tiết
+  function showSummaryReport() {
+    const totalQuestions = recordHistory.length;
+    const correctCount = recordHistory.filter(r => r.isCorrect).length;
+    const wrongList = recordHistory.filter(r => !r.isCorrect);
+    const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
-    let mistakesHTML = '';
-    if (stats.mistakes.length > 0) {
-      mistakesHTML = `
-        <div style="font-weight:bold; margin: 15px 0 5px 0; text-align:left;">📌 Các từ/câu cần lưu ý ôn lại:</div>
-        <div class="mistake-list">
-          ${stats.mistakes.map(m => `
-            <div class="mistake-item">
-              • <b>${m.vocab}</b> (${m.pinyin}): ${m.meaning}${m.example_cn ? `<br><small style="color:#666;">cn: ${m.example_cn}</small>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      `;
+    let wrongDetailsHtml = '';
+    if (wrongList.length > 0) {
+      wrongDetailsHtml = `<div style="margin-top:15px; font-weight:bold; color: var(--danger);">Các câu/từ cần ôn lại:</div>`;
+      wrongList.forEach(w => {
+        wrongDetailsHtml += `
+          <div class="wrong-item">
+            📌 <b>${w.item.vocab || w.item.example_vi}</b><br>
+            Đáp án đúng: <i>${w.correctText}</i>
+          </div>
+        `;
+      });
+    } else {
+      wrongDetailsHtml = `<div style="margin-top:15px; color: var(--primary); font-weight:bold;">🌟 Tuyệt vời! Bạn không làm sai câu nào cả!</div>`;
     }
 
+    const sectionName = activeSection === 1 ? 'Ôn Từ Vựng' : (activeSection === 2 ? 'Sắp Xếp Câu' : 'Luyện Gõ Câu');
+
     document.getElementById('quizArea').innerHTML = `
-      <div class="report-card">
-        <h2 style="color: var(--primary); margin-top:0;">${evaluation}</h2>
-        <p style="color:#666;">Bảng phân tích đánh giá kết quả ôn luyện</p>
-        
-        <div class="stat-box">
-          <div class="stat-item">
-            <div class="stat-num">${accuracy}%</div>
-            <div class="stat-label">Chính xác</div>
+      <div style="text-align:center;">
+        <div style="font-size:50px; margin-bottom: 10px;">🏆</div>
+        <h2 style="margin:0 0 10px 0; color: var(--primary);">KẾT QUẢ CỦA BẠN</h2>
+        <div style="color:#666; font-size:14px;">Phần: <b>${sectionName}</b></div>
+
+        <div class="report-card">
+          <div class="report-stat"><span>Tổng số câu hỏi:</span> <span>${totalQuestions}</span></div>
+          <div class="report-stat"><span>Số câu làm đúng:</span> <span style="color: var(--primary);">${correctCount}</span></div>
+          <div class="report-stat"><span>Số câu làm sai:</span> <span style="color: var(--danger);">${wrongList.length}</span></div>
+          <div class="report-stat" style="border-bottom:none; font-size: 18px; margin-top: 5px;">
+            <span>Tỷ lệ chính xác:</span> 
+            <span style="color: ${accuracy >= 80 ? 'var(--primary)' : 'orange'};">${accuracy}%</span>
           </div>
-          <div class="stat-item">
-            <div class="stat-num" style="color:var(--primary);">${stats.correctFirstTry}/${totalInRound}</div>
-            <div class="stat-label">Đúng ngay lần đầu</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-num" style="color:var(--danger);">${stats.wrongCount}</div>
-            <div class="stat-label">Lần sai/Mất tim</div>
-          </div>
+          ${wrongDetailsHtml}
         </div>
 
-        ${mistakesHTML}
+        ${mistakeQueue.length > 0 ? `
+          <button class="btn-main btn-secondary" onclick="retryMistakes()">🔁 Ôn lại ${mistakeQueue.length} câu chưa đúng</button>
+        ` : ''}
+        
+        <button class="btn-main" onclick="resetQuizAreaUI(); startRound();">▶️ Tiếp tục ôn luyện bài này</button>
+        <button class="btn-main" style="background: #666; border-color: #444;" onclick="location.reload()">🏁 Kết thúc / Chọn bài khác</button>
       </div>
-
-      <button class="btn-main" onclick="startRound()">🔄 Tiếp tục ôn luyện bài này</button>
-      <button class="btn-main btn-secondary" onclick="switchSection(activeSection)">🏁 Kết thúc / Chọn bài khác</button>
     `;
+  }
+
+  function retryMistakes() {
+    currentQueue = [...mistakeQueue];
+    mistakeQueue = [];
+    recordHistory = [];
+    totalInRound = currentQueue.length;
+    completedInRound = 0;
+    resetQuizAreaUI();
+    updateProgress();
+    nextQuestion();
   }
 </script>
 
