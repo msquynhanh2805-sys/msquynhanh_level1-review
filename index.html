@@ -60,8 +60,7 @@
     .sentence-target { background: #fff; border: 2px dashed #bbb; align-items: center; }
     .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
     
-    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 12px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
-    .word-chip span.py { font-size: 11px; color: #666; font-weight: normal; }
+    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 14px; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; line-height: 1.2; user-select: none; }
 
     /* Typing Input */
     input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
@@ -164,10 +163,10 @@
   let completedInRound = 0;
   let isAnswered = false;
 
-  // Hàm loại bỏ tất cả dấu câu
+  // Hàm loại bỏ tất cả dấu câu và ký tự thừa
   function cleanPunctuation(str) {
     if (!str) return '';
-    return str.replace(/[。？！，、；：""''（）《》,.?!;: ]/g, '').trim();
+    return str.replace(/[。？！，、；：""''（）《》,.?!;:—–\-~…\.]/g, '').trim();
   }
 
   // Web Audio Synth
@@ -227,7 +226,7 @@
         document.getElementById('loading').innerHTML = `
           <div style="color:red; text-align:left;">
             ⚠️ <b>Chưa tìm thấy file HSK1_flashcards_theo_bai.xlsx!</b><br>
-            Hãy chắc chắn bạn đã upload file Excel tên <code>HSK1_flashcards_theo_bai.xlsx</code> lên GitHub.
+            Hãy chắc chắn bạn đã upload file Excel tên <code>HSK1_flashcards_theo_bai.xlsx</code> lên thư mục của dự án.
           </div>`;
       });
   };
@@ -248,7 +247,6 @@
       if (idx + 1 === sec) btn.classList.add('active');
       else btn.classList.remove('active');
     });
-    // Phải reset giao diện để chuyển câu hỏi ngay lập tức
     resetQuizAreaUI();
     startRound();
   }
@@ -294,15 +292,17 @@
       label = `Tất cả 30 Bài`;
     }
 
-    // Nếu chọn phần 2 hoặc phần 3 thì lọc loại bỏ các câu không có ví dụ
-    if (activeSection === 2 || activeSection === 3) {
+    // Nếu chọn phần 2 (Sắp xếp câu Pinyin) hoặc phần 3 (Luyện gõ câu) thì lọc câu cần có ví dụ Pinyin / Tiếng Việt
+    if (activeSection === 2) {
+      filtered = filtered.filter(i => i.example_pinyin && i.example_vi);
+    } else if (activeSection === 3) {
       filtered = filtered.filter(i => i.example_cn && i.example_vi);
     }
 
     document.getElementById('currentModeLabel').innerText = label;
 
     if (filtered.length === 0) {
-      alert("⚠️️ Không tìm thấy dữ liệu bài tập thích hợp cho phần này!");
+      alert("⚠ Không tìm thấy dữ liệu bài tập thích hợp cho phần này!");
       return;
     }
 
@@ -374,19 +374,18 @@
       area.appendChild(grid);
 
     } else if (activeSection === 2) {
-      // PHẦN 2: SẮP XẾP CÂU
-      document.getElementById('typeTag').innerText = "PHẦN 2: SẮP XẾP CÂU";
+      // PHẦN 2: SẮP XẾP CÂU (CHỈ DÙNG PINYIN)
+      document.getElementById('typeTag').innerText = "PHẦN 2: SẮP XẾP CÂU (PINYIN)";
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
-      document.getElementById('questionSub').innerText = "Bấm chọn từ để ghép thành câu tiếng Trung đúng:";
+      document.getElementById('questionSub').innerText = "Bấm chọn các từ Pinyin để ghép thành câu hoàn chỉnh:";
 
-      let cleanCn = cleanPunctuation(currentItem.example_cn);
-      let cnWords = cleanCn.split('');
-      let pyWords = currentItem.example_pinyin ? currentItem.example_pinyin.split(' ') : [];
+      // Tách chuỗi Pinyin thành danh sách từ dựa theo khoảng trắng
+      let rawPinyin = currentItem.example_pinyin.trim();
+      let cleanPyStr = cleanPunctuation(rawPinyin);
+      let pyWords = cleanPyStr.split(/\s+/).filter(w => w.length > 0);
 
-      let chips = cnWords.map((char, idx) => ({
-        hanzi: char,
-        pinyin: pyWords[idx] || ''
-      })).sort(() => Math.random() - 0.5);
+      // Trộn ngẫu nhiên danh sách các từ Pinyin
+      let shuffledPyWords = [...pyWords].sort(() => Math.random() - 0.5);
 
       area.innerHTML = `
         <div class="sentence-target" id="targetArea"></div>
@@ -396,10 +395,10 @@
       const poolArea = document.getElementById('poolArea');
       const targetArea = document.getElementById('targetArea');
 
-      chips.forEach((c) => {
+      shuffledPyWords.forEach((word) => {
         let chip = document.createElement('div');
         chip.className = 'word-chip';
-        chip.innerHTML = `${c.hanzi} ${c.pinyin ? `<span class="py">${c.pinyin}</span>` : ''}`;
+        chip.innerText = word;
         chip.onclick = () => {
           if (chip.parentElement.id === 'poolArea') targetArea.appendChild(chip);
           else poolArea.appendChild(chip);
@@ -445,16 +444,20 @@
       isCorrect = isOptionCorrect;
       correctAnswerText = `${currentItem.vocab} (${currentItem.pinyin}) : ${currentItem.meaning}`;
     } else if (activeSection === 2) {
-      const userSentence = Array.from(document.getElementById('targetArea').children)
-        .map(el => el.childNodes[0].textContent.trim()).join('');
-      const cleanTarget = cleanPunctuation(currentItem.example_cn);
-      isCorrect = (cleanPunctuation(userSentence) === cleanTarget);
-      correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
+      // Lấy danh sách từ Pinyin người dùng đã ghép
+      const userWords = Array.from(document.getElementById('targetArea').children)
+        .map(el => el.innerText.trim());
+      const userPinyinStr = userWords.join(' ').toLowerCase();
+
+      const targetPinyinClean = cleanPunctuation(currentItem.example_pinyin).split(/\s+/).join(' ').toLowerCase();
+
+      isCorrect = (userPinyinStr === targetPinyinClean);
+      correctAnswerText = currentItem.example_pinyin;
     } else if (activeSection === 3) {
       const val = document.getElementById('typeInput').value;
       const cleanTarget = cleanPunctuation(currentItem.example_cn);
       isCorrect = (cleanPunctuation(val) === cleanTarget);
-      correctAnswerText = currentItem.example_cn;
+      correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
     }
 
     // Ghi lịch sử kết quả
@@ -506,7 +509,7 @@
       wrongDetailsHtml = `<div style="margin-top:15px; color: var(--primary); font-weight:bold;">🌟 Tuyệt vời! Bạn không làm sai câu nào cả!</div>`;
     }
 
-    const sectionName = activeSection === 1 ? 'Ôn Từ Vựng' : (activeSection === 2 ? 'Sắp Xếp Câu' : 'Luyện Gõ Câu');
+    const sectionName = activeSection === 1 ? 'Ôn Từ Vựng' : (activeSection === 2 ? 'Sắp Xếp Câu (Pinyin)' : 'Luyện Gõ Câu');
 
     document.getElementById('quizArea').innerHTML = `
       <div style="text-align:center;">
