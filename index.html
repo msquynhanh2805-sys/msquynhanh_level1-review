@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Review HSK1</title>
+  
+  <!-- Tiêu đề trên tab trình duyệt -->
+  <title>review hsk1_Ms QA</title>
+
+  <!-- Thẻ hiển thị tiêu đề xem trước khi chia sẻ link (Zalo, Facebook, Messenger) -->
+  <meta property="og:title" content="review hsk1_Ms QA">
+  <meta property="og:description" content="Chương Trình Ôn Tập Từ Vựng & Câu Từ">
+  <meta property="og:type" content="website">
 
   <!-- Thư viện đọc file Excel (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -90,8 +97,8 @@
 
 <div class="container">
   <header>
-    <h1>📚 Luyện Tiếng Trung HSK1</h1>
-    <div class="subtitle">Chương Trình Ôn Tập Từ Vựng & Câu Từ</div>
+    <h1>📚 REVIEW HSK1</h1>
+    <div class="subtitle">Ôn Tập Từ Vựng & Câu Từ</div>
   </header>
 
   <div id="loading">⏳ Đang tải dữ liệu từ file <b>HSK1_flashcards_theo_bai.xlsx</b>...</div>
@@ -225,7 +232,7 @@
       .catch(err => {
         document.getElementById('loading').innerHTML = `
           <div style="color:red; text-align:left;">
-            ⚠️ <b>Chưa tìm thấy file HSK1_flashcards_theo_bai.xlsx!</b><br>
+            ⚠️️ <b>Chưa tìm thấy file HSK1_flashcards_theo_bai.xlsx!</b><br>
             Hãy chắc chắn bạn đã upload file Excel tên <code>HSK1_flashcards_theo_bai.xlsx</code> lên thư mục của dự án.
           </div>`;
       });
