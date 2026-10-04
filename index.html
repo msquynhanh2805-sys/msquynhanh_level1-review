@@ -47,7 +47,7 @@
     /* Question box */
     .question-card { background: var(--gray-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; }
     .type-tag { display: inline-block; background: var(--secondary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
-    .question-text { font-size: 22px; font-weight: bold; color: #582be8; margin: 10px 0; }
+    .question-text { font-size: 22px; font-weight: bold; color: #111; margin: 10px 0; }
     .sub-text { font-size: 15px; color: #666; }
 
     /* Options Grid */
@@ -56,25 +56,11 @@
     .btn-option:hover { background: #f1f1f1; }
 
     /* Sentence Puzzle */
-    .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 10px; min-height: 75px; padding: 12px; border-radius: 16px; margin-bottom: 15px; align-items: center; justify-content: center; }
-    .sentence-target { background: #fff; border: 2px dashed #ccc; position: relative; }
-    .sentence-target:empty::before { content: "Click vào từng từ bên dưới để ghép câu..."; color: #aaa; font-size: 14px; }
-    .word-pool { background: transparent; }
+    .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 8px; min-height: 65px; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
+    .sentence-target { background: #fff; border: 2px dashed #bbb; align-items: center; }
+    .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
     
-    .word-chip { 
-      background: white; 
-      border: 2px solid #e5e5e5; 
-      border-radius: 20px; 
-      padding: 10px 18px; 
-      font-size: 18px; 
-      font-weight: bold; 
-      color: #222; 
-      cursor: pointer; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      transition: all 0.15s ease;
-      user-select: none;
-    }
-    .word-chip:hover { border-color: #582be8; transform: translateY(-2px); }
+    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 10px 15px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; color: #008a00; text-align: center; }
 
     /* Typing Input */
     input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
@@ -176,6 +162,7 @@
   let totalInRound = 0;
   let completedInRound = 0;
   let isAnswered = false;
+  let vocabMap = {};
 
   let stats = { correctFirstTry: 0, wrongCount: 0, mistakes: [] };
 
@@ -211,7 +198,7 @@
     }
   }
 
-  function cleanText(text) {
+  function cleanPunctuation(text) {
     if (!text) return '';
     return text.replace(/[。？！，,.?!、;:""''（）\s]/g, '').toLowerCase().trim();
   }
@@ -237,6 +224,12 @@
           example_cn: r['Ví dụ tiếng Trung'] ? String(r['Ví dụ tiếng Trung']).trim() : '',
           example_pinyin: r['Ví dụ pinyin'] ? String(r['Ví dụ pinyin']).trim() : ''
         })).filter(item => item.vocab && item.meaning);
+
+        rawData.forEach(item => {
+          if (item.vocab && item.pinyin) {
+            vocabMap[item.vocab] = item.pinyin;
+          }
+        });
 
         populateSingleLessons();
         document.getElementById('loading').classList.add('hidden');
@@ -297,7 +290,7 @@
     }
 
     if (activeSection === 2 || activeSection === 3) {
-      filtered = filtered.filter(i => i.example_cn && i.example_vi && i.example_pinyin);
+      filtered = filtered.filter(i => i.example_cn && i.example_vi);
     }
 
     document.getElementById('currentModeLabel').innerText = label;
@@ -318,8 +311,8 @@
     document.getElementById('quizArea').innerHTML = `
       <div class="question-card">
         <span class="type-tag" id="typeTag">Loại bài tập</span>
-        <div style="font-size: 15px; color:#444; margin-bottom:5px;">Sắp xếp từ thành câu nghĩa:</div>
         <div class="question-text" id="questionTitle">Nội dung</div>
+        <div class="sub-text" id="questionSub">Hướng dẫn</div>
       </div>
       <div id="interactiveArea"></div>
       <div id="feedback" class="feedback-box hidden"></div>
@@ -353,6 +346,18 @@
     renderQuiz();
   }
 
+  function getPinyinArray(sentence, rawPinyin) {
+    let cleanSentence = cleanPunctuation(sentence);
+    let chars = cleanSentence.split('');
+    let pinyinWords = rawPinyin ? rawPinyin.trim().split(/\s+/) : [];
+
+    if (pinyinWords.length === chars.length) {
+      return pinyinWords;
+    }
+
+    return chars.map(char => vocabMap[char] || '');
+  }
+
   function renderQuiz() {
     const area = document.getElementById('interactiveArea');
     area.innerHTML = '';
@@ -364,8 +369,10 @@
 
       if (isCnToVi) {
         document.getElementById('questionTitle').innerText = `${currentItem.vocab} (${currentItem.pinyin})`;
+        document.getElementById('questionSub').innerText = "Chọn nghĩa tiếng Việt tương ứng:";
       } else {
-        document.getElementById('questionTitle').innerText = `"${currentItem.meaning}"`;
+        document.getElementById('questionTitle').innerText = currentItem.meaning;
+        document.getElementById('questionSub').innerText = "Chọn từ tiếng Trung tương ứng:";
       }
 
       let distractors = rawData.filter(i => i.vocab !== currentItem.vocab).sort(() => Math.random() - 0.5).slice(0, 2);
@@ -384,18 +391,19 @@
       area.appendChild(grid);
 
     } else if (activeSection === 2) {
-      // PHẦN 2: SẮP XẾP CÂU (CHỈ HIỂN THỊ CÁC TỪ PINYIN CHUẨN ĐÉT)
+      // PHẦN 2: SẮP XẾP CÂU (CHỈ HIỂN THỊ PINYIN, KHÔNG KÈM CHỮ HÁN)
       document.getElementById('typeTag').innerText = "PHẦN 2: SẮP XẾP CÂU";
-      document.getElementById('questionTitle').innerText = `"${currentItem.example_vi}"`;
+      document.getElementById('questionTitle').innerText = currentItem.example_vi;
+      document.getElementById('questionSub').innerText = "Bấm chọn Pinyin để ghép thành câu hoàn chỉnh:";
 
-      // Tách từ Pinyin bằng khoảng trắng từ cột Ví dụ Pinyin trong Excel
-      let rawPinyinWords = currentItem.example_pinyin.trim().split(/\s+/);
-      
-      // Xóa dấu câu ở các từ Pinyin (ví dụ "gōngsī." -> "gōngsī")
-      let cleanPinyinWords = rawPinyinWords.map(w => w.replace(/[。？！，,.?!、;:""''（）]/g, '')).filter(w => w.length > 0);
+      let pyParts = getPinyinArray(currentItem.example_cn, currentItem.example_pinyin);
+      let cleanSentence = cleanPunctuation(currentItem.example_cn);
+      let cnWords = cleanSentence.split('');
 
-      // Xáo trộn vị trí các từ Pinyin
-      let shuffledWords = [...cleanPinyinWords].sort(() => Math.random() - 0.5);
+      // Lưu thông tin cả chữ Hán lẫn Pinyin nhưng CHỈ HIỂN THỊ Pinyin trên thẻ
+      let chips = cnWords.map((char, idx) => {
+        return { hanzi: char, pinyin: pyParts[idx] || char };
+      }).sort(() => Math.random() - 0.5);
 
       area.innerHTML = `
         <div class="sentence-target" id="targetArea"></div>
@@ -405,11 +413,11 @@
       const poolArea = document.getElementById('poolArea');
       const targetArea = document.getElementById('targetArea');
 
-      shuffledWords.forEach((word) => {
+      chips.forEach((c) => {
         let chip = document.createElement('div');
         chip.className = 'word-chip';
-        chip.innerText = word;
-        
+        chip.dataset.hanzi = c.hanzi; // lưu âm thầm chữ hán để kiểm tra
+        chip.innerText = c.pinyin;    // CHỈ HIỂN THỊ PINYIN
         chip.onclick = () => {
           if (chip.parentElement.id === 'poolArea') targetArea.appendChild(chip);
           else poolArea.appendChild(chip);
@@ -418,9 +426,10 @@
       });
 
     } else if (activeSection === 3) {
-      // PHẦN 3: LUYỆN GÕ CÂU
+      // PHẦN 3: LUYỆN GÕ CÂU (BỎ DÒNG GỢI Ý PINYIN)
       document.getElementById('typeTag').innerText = "PHẦN 3: LUYỆN GÕ CÂU";
-      document.getElementById('questionTitle').innerText = `"${currentItem.example_vi}"`;
+      document.getElementById('questionTitle').innerText = currentItem.example_vi;
+      document.getElementById('questionSub').innerText = "Hãy gõ câu chữ Hán tương ứng:";
 
       area.innerHTML = `
         <input type="text" id="typeInput" placeholder="Gõ câu chữ Hán vào đây..." autocomplete="off">
@@ -455,15 +464,15 @@
       correctAnswerText = `${currentItem.vocab} (${currentItem.pinyin}) : ${currentItem.meaning}`;
     } else if (activeSection === 2) {
       const userSentence = Array.from(document.getElementById('targetArea').children)
-        .map(el => el.innerText).join('');
+        .map(el => el.dataset.hanzi).join('');
       
-      const targetClean = cleanText(currentItem.example_pinyin);
-      isCorrect = (cleanText(userSentence) === targetClean);
-      correctAnswerText = `${currentItem.example_pinyin}\n(${currentItem.example_cn})`;
+      const targetClean = cleanPunctuation(currentItem.example_cn);
+      isCorrect = (cleanPunctuation(userSentence) === targetClean);
+      correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
     } else if (activeSection === 3) {
       const val = document.getElementById('typeInput').value;
-      const targetClean = cleanText(currentItem.example_cn);
-      isCorrect = (cleanText(val) === targetClean);
+      const targetClean = cleanPunctuation(currentItem.example_cn);
+      isCorrect = (cleanPunctuation(val) === targetClean);
       correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
     }
 
