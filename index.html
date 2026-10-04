@@ -60,8 +60,7 @@
     .sentence-target { background: #fff; border: 2px dashed #bbb; align-items: center; }
     .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
     
-    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 12px; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; min-width: 42px; }
-    .word-chip span.py { font-size: 12px; color: #008a00; font-weight: bold; margin-top: 3px; }
+    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 10px 15px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; color: #008a00; text-align: center; }
 
     /* Typing Input */
     input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
@@ -226,7 +225,6 @@
           example_pinyin: r['Ví dụ pinyin'] ? String(r['Ví dụ pinyin']).trim() : ''
         })).filter(item => item.vocab && item.meaning);
 
-        // Tạo từ điển tra cứu Pinyin cho từng chữ Hán
         rawData.forEach(item => {
           if (item.vocab && item.pinyin) {
             vocabMap[item.vocab] = item.pinyin;
@@ -348,7 +346,6 @@
     renderQuiz();
   }
 
-  // Tách hoặc lấy Pinyin cho từng chữ Hán để đảm bảo 100% chữ nào cũng có Pinyin
   function getPinyinArray(sentence, rawPinyin) {
     let cleanSentence = cleanPunctuation(sentence);
     let chars = cleanSentence.split('');
@@ -358,7 +355,6 @@
       return pinyinWords;
     }
 
-    // Nếu pinyin trong câu viết liền hoặc thiếu, tự tra Pinyin từng từ vựng
     return chars.map(char => vocabMap[char] || '');
   }
 
@@ -395,17 +391,18 @@
       area.appendChild(grid);
 
     } else if (activeSection === 2) {
-      // PHẦN 2: SẮP XẾP CÂU (LUÔN KÈM PINYIN CHO MỖI TỪ)
+      // PHẦN 2: SẮP XẾP CÂU (CHỈ HIỂN THỊ PINYIN, KHÔNG KÈM CHỮ HÁN)
       document.getElementById('typeTag').innerText = "PHẦN 2: SẮP XẾP CÂU";
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
-      document.getElementById('questionSub').innerText = "Bấm chọn từ để ghép thành câu tiếng Trung đúng:";
+      document.getElementById('questionSub').innerText = "Bấm chọn Pinyin để ghép thành câu hoàn chỉnh:";
 
+      let pyParts = getPinyinArray(currentItem.example_cn, currentItem.example_pinyin);
       let cleanSentence = cleanPunctuation(currentItem.example_cn);
       let cnWords = cleanSentence.split('');
-      let pyParts = getPinyinArray(currentItem.example_cn, currentItem.example_pinyin);
-      
+
+      // Lưu thông tin cả chữ Hán lẫn Pinyin nhưng CHỈ HIỂN THỊ Pinyin trên thẻ
       let chips = cnWords.map((char, idx) => {
-        return { hanzi: char, pinyin: pyParts[idx] || '' };
+        return { hanzi: char, pinyin: pyParts[idx] || char };
       }).sort(() => Math.random() - 0.5);
 
       area.innerHTML = `
@@ -419,8 +416,8 @@
       chips.forEach((c) => {
         let chip = document.createElement('div');
         chip.className = 'word-chip';
-        // Luôn hiển thị chữ Hán và Pinyin bên dưới
-        chip.innerHTML = `${c.hanzi}${c.pinyin ? `<span class="py">${c.pinyin}</span>` : ''}`;
+        chip.dataset.hanzi = c.hanzi; // lưu âm thầm chữ hán để kiểm tra
+        chip.innerText = c.pinyin;    // CHỈ HIỂN THỊ PINYIN
         chip.onclick = () => {
           if (chip.parentElement.id === 'poolArea') targetArea.appendChild(chip);
           else poolArea.appendChild(chip);
@@ -429,10 +426,10 @@
       });
 
     } else if (activeSection === 3) {
-      // PHẦN 3: LUYỆN GÕ CÂU (KHÔNG HIỂN THỊ PINYIN HỌC VIÊN TỰ NHỚ)
+      // PHẦN 3: LUYỆN GÕ CÂU (BỎ DÒNG GỢI Ý PINYIN)
       document.getElementById('typeTag').innerText = "PHẦN 3: LUYỆN GÕ CÂU";
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
-      document.getElementById('questionSub').innerText = "Hãy gõ lại câu tiếng Trung tương ứng (không có gợi ý Pinyin):";
+      document.getElementById('questionSub').innerText = "Hãy gõ câu chữ Hán tương ứng:";
 
       area.innerHTML = `
         <input type="text" id="typeInput" placeholder="Gõ câu chữ Hán vào đây..." autocomplete="off">
@@ -467,7 +464,7 @@
       correctAnswerText = `${currentItem.vocab} (${currentItem.pinyin}) : ${currentItem.meaning}`;
     } else if (activeSection === 2) {
       const userSentence = Array.from(document.getElementById('targetArea').children)
-        .map(el => el.childNodes[0].textContent.trim()).join('');
+        .map(el => el.dataset.hanzi).join('');
       
       const targetClean = cleanPunctuation(currentItem.example_cn);
       isCorrect = (cleanPunctuation(userSentence) === targetClean);
