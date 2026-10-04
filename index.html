@@ -56,12 +56,12 @@
     .btn-option:hover { background: #f1f1f1; }
 
     /* Sentence Puzzle */
-    .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 8px; min-height: 55px; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
+    .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
     .sentence-target { background: #fff; border: 2px dashed #bbb; align-items: center; }
     .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
     
     .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 12px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
-    .word-chip span.py { font-size: 11px; color: #666; font-weight: normal; }
+    .word-chip span.py { font-size: 12px; color: #666; font-weight: normal; margin-top: 2px; }
 
     /* Typing Input */
     input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
@@ -156,18 +156,49 @@
   let rawData = [];
   let currentQueue = [];
   let mistakeQueue = [];
-  let recordHistory = []; // Lưu lịch sử để phục vụ bảng phân tích
+  let recordHistory = [];
   let currentItem = null;
-  let activeSection = 1; // 1: Ôn từ, 2: Xếp câu, 3: Luyện gõ
+  let activeSection = 1;
   let hearts = 5;
   let totalInRound = 0;
   let completedInRound = 0;
   let isAnswered = false;
 
-  // Hàm loại bỏ tất cả dấu câu
+  // Loại bỏ tất cả dấu câu
   function cleanPunctuation(str) {
     if (!str) return '';
     return str.replace(/[。？！，、；：""''（）《》,.?!;: ]/g, '').trim();
+  }
+
+  // Tách Pinyin thông minh tương ứng với số lượng chữ Hán
+  function parseSentenceChips(cnStr, pyStr) {
+    let cleanCn = cleanPunctuation(cnStr);
+    let cnChars = cleanCn.split('');
+    
+    // Tách pinyin theo khoảng trắng và lọc dấu câu
+    let rawPyTokens = (pyStr || '').replace(/[。？！，,.?!]/g, '').split(/\s+/).filter(Boolean);
+    let pyList = [];
+
+    // Nếu số cụm Pinyin khớp với số chữ Hán
+    if (rawPyTokens.length === cnChars.length) {
+      pyList = rawPyTokens;
+    } else {
+      // Trường hợp Pinyin ghép liền nhau (ví dụ: laoshi), phân bổ đều
+      let fullPy = rawPyTokens.join('');
+      let approxLen = Math.max(1, Math.floor(fullPy.length / cnChars.length));
+      for (let i = 0; i < cnChars.length; i++) {
+        if (i === cnChars.length - 1) {
+          pyList.push(fullPy.substring(i * approxLen));
+        } else {
+          pyList.push(fullPy.substring(i * approxLen, (i + 1) * approxLen));
+        }
+      }
+    }
+
+    return cnChars.map((char, idx) => ({
+      hanzi: char,
+      pinyin: pyList[idx] || ''
+    }));
   }
 
   // Web Audio Synth
@@ -211,7 +242,7 @@
           lessonNum: parseInt(String(r['Bài'] || '').replace(/\D/g, '')) || 1,
           lessonStr: String(r['Bài'] || '').trim(),
           vocab: String(r['Từ'] || '').trim(),
-          pinyin: String(r['Pinyin'] || '').trim(),
+          pinyin: cleanPunctuation(String(r['Pinyin'] || '').trim()),
           meaning: String(r['Nghĩa tiếng Việt'] || '').trim(),
           example_vi: r['Ví dụ tiếng Việt'] ? String(r['Ví dụ tiếng Việt']).trim() : '',
           example_cn: r['Ví dụ tiếng Trung'] ? String(r['Ví dụ tiếng Trung']).trim() : '',
@@ -241,14 +272,12 @@
     });
   }
 
-  // Chuyển đổi giữa 3 Phần Bài Tập
   function switchSection(sec) {
     activeSection = sec;
     document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
       if (idx + 1 === sec) btn.classList.add('active');
       else btn.classList.remove('active');
     });
-    // Phải reset giao diện để chuyển câu hỏi ngay lập tức
     resetQuizAreaUI();
     startRound();
   }
@@ -274,7 +303,6 @@
     `;
   }
 
-  // Lọc bài tập và bắt đầu
   function startRound() {
     const mode = document.getElementById('modeSelect').value;
     let filtered = [];
@@ -294,7 +322,6 @@
       label = `Tất cả 30 Bài`;
     }
 
-    // Nếu chọn phần 2 hoặc phần 3 thì lọc loại bỏ các câu không có ví dụ
     if (activeSection === 2 || activeSection === 3) {
       filtered = filtered.filter(i => i.example_cn && i.example_vi);
     }
@@ -302,7 +329,7 @@
     document.getElementById('currentModeLabel').innerText = label;
 
     if (filtered.length === 0) {
-      alert("⚠️️ Không tìm thấy dữ liệu bài tập thích hợp cho phần này!");
+      alert("⚠ Không tìm thấy dữ liệu bài tập thích hợp cho phần này!");
       return;
     }
 
@@ -379,14 +406,8 @@
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
       document.getElementById('questionSub').innerText = "Bấm chọn từ để ghép thành câu tiếng Trung đúng:";
 
-      let cleanCn = cleanPunctuation(currentItem.example_cn);
-      let cnWords = cleanCn.split('');
-      let pyWords = currentItem.example_pinyin ? currentItem.example_pinyin.split(' ') : [];
-
-      let chips = cnWords.map((char, idx) => ({
-        hanzi: char,
-        pinyin: pyWords[idx] || ''
-      })).sort(() => Math.random() - 0.5);
+      // Sử dụng hàm tách chữ Hán và Pinyin chuẩn xác
+      let chips = parseSentenceChips(currentItem.example_cn, currentItem.example_pinyin).sort(() => Math.random() - 0.5);
 
       area.innerHTML = `
         <div class="sentence-target" id="targetArea"></div>
@@ -457,7 +478,6 @@
       correctAnswerText = currentItem.example_cn;
     }
 
-    // Ghi lịch sử kết quả
     recordHistory.push({
       item: currentItem,
       isCorrect: isCorrect,
@@ -484,7 +504,6 @@
     document.getElementById('actionBtn').innerText = 'Câu tiếp theo ➡️';
   }
 
-  // Bảng phân tích đánh giá chi tiết
   function showSummaryReport() {
     const totalQuestions = recordHistory.length;
     const correctCount = recordHistory.filter(r => r.isCorrect).length;
