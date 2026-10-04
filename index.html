@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Luyện Tiếng Trung Duolingo - HSK1</title>
+  <title>Ứng Dụng Luyện Tiếng Trung HSK1</title>
 
-  <!-- Thư viện đọc file Excel (.xlsx) trực tiếp trên trình duyệt -->
+  <!-- Thư viện đọc file Excel (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
-      --primary: #58cc02;
-      --primary-dark: #46a302;
+      --primary: #00b900;
+      --primary-dark: #008a00;
       --secondary: #1cb0f6;
       --danger: #ff4b4b;
       --gray-bg: #f7f7f7;
@@ -23,49 +23,56 @@
     body { background-color: #f0f2f5; margin: 0; padding: 15px; color: var(--text); }
     .container { max-width: 650px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
     
-    header { text-align: center; border-bottom: 2px solid var(--card-border); padding-bottom: 15px; margin-bottom: 20px; }
-    h1 { color: var(--primary); margin: 0 0 10px 0; font-size: 26px; }
-    
-    .status-bar { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px 18px; border-radius: 12px; font-weight: bold; font-size: 15px; margin-bottom: 20px; border: 1px solid var(--card-border); }
+    header { text-align: center; border-bottom: 2px solid var(--card-border); padding-bottom: 15px; margin-bottom: 15px; }
+    h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 26px; }
+    .subtitle { color: #666; font-size: 14px; font-weight: bold; }
+
+    /* Nav Tabs cho 3 Phần Bài Tập */
+    .section-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 12px 5px; border: 2px solid var(--card-border); background: var(--gray-bg); border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; color: #555; text-align: center; transition: all 0.2s; }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
+
+    /* Bộ lọc bài học */
+    .filter-card { background: #f8f9fa; border: 1px solid var(--card-border); border-radius: 12px; padding: 12px 15px; margin-bottom: 20px; }
+    .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    select, input[type="number"] { padding: 8px 10px; border-radius: 8px; border: 1px solid #ccc; font-weight: bold; outline: none; }
+    input[type="number"] { width: 70px; text-align: center; }
+
+    .status-bar { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; margin-bottom: 15px; }
     .hearts { color: var(--danger); font-size: 18px; }
     
-    .progress-container { width: 100%; background: #e5e5e5; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+    .progress-container { width: 100%; background: #e5e5e5; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 20px; }
     .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
 
-    select { padding: 8px 12px; border-radius: 8px; border: 1px solid #ccc; font-weight: bold; color: var(--text); cursor: pointer; outline: none; }
-
     /* Flashcard / Question box */
-    .question-card { background: var(--gray-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; position: relative; }
+    .question-card { background: var(--gray-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; }
     .type-tag { display: inline-block; background: var(--secondary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
     .question-text { font-size: 22px; font-weight: bold; color: #111; margin: 10px 0; }
     .sub-text { font-size: 15px; color: #666; }
 
-    /* Options / Buttons */
-    .options-grid { display: grid; gap: 12px; margin-bottom: 20px; }
-    .btn-option { background: white; border: 2px solid var(--card-border); border-bottom-width: 4px; padding: 14px; border-radius: 12px; font-size: 17px; font-weight: bold; text-align: left; cursor: pointer; transition: all 0.1s; color: var(--text); }
-    .btn-option:hover { background: #f1f1f1; border-color: #ccc; }
-    .btn-option:active { transform: translateY(2px); border-bottom-width: 2px; }
+    /* Options Grid */
+    .options-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+    .btn-option { background: white; border: 2px solid var(--card-border); border-bottom-width: 4px; padding: 14px; border-radius: 12px; font-size: 17px; font-weight: bold; text-align: left; cursor: pointer; color: var(--text); }
+    .btn-option:hover { background: #f1f1f1; }
 
     /* Sentence Puzzle */
     .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 8px; min-height: 55px; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
     .sentence-target { background: #fff; border: 2px dashed #bbb; align-items: center; }
     .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
     
-    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 14px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 12px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
     .word-chip span.py { font-size: 11px; color: #666; font-weight: normal; }
 
     /* Typing Input */
     input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
     input[type="text"]:focus { border-color: var(--secondary); }
 
-    /* Action buttons */
-    .btn-main { width: 100%; background: var(--primary); color: white; border: none; border-bottom: 4px solid var(--primary-dark); padding: 14px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
-    .btn-main:hover { background: #4ebd02; }
-    .btn-main:active { transform: translateY(2px); border-bottom-width: 2px; }
+    /* Buttons */
+    .btn-main { width: 100%; background: var(--primary); color: white; border: none; border-bottom: 4px solid var(--primary-dark); padding: 14px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+    .btn-main:hover { background: #00a000; }
 
     .hidden { display: none !important; }
     
-    /* Result Popup */
     .feedback-box { padding: 15px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; text-align: center; }
     .feedback-box.correct { background: #d7ffb8; color: #2b7000; border: 2px solid #a5ed6e; }
     .feedback-box.wrong { background: #ffdfe0; color: #ea2b2b; border: 2px solid #ffc1c1; }
@@ -77,20 +84,46 @@
 
 <div class="container">
   <header>
-    <h1>🐼 HSK1 Duolingo</h1>
-    <div>Luyện Từ Vựng - Sắp Xếp Câu - Gõ Chữ Hán</div>
+    <h1>📚 Luyện Tiếng Trung HSK1</h1>
+    <div class="subtitle">Chương Trình Ôn Tập Từ Vựng & Câu Từ</div>
   </header>
 
   <div id="loading">⏳ Đang tải dữ liệu từ file <b>HSK1_flashcards_theo_bai.xlsx</b>...</div>
 
   <div id="app" class="hidden">
-    <div class="status-bar">
-      <div>
-        Chế độ: 
-        <select id="modeSelect" onchange="changeMode()">
-          <!-- Tự động điền bài từ Excel -->
+    <!-- Chọn 1 trong 3 Phần bài tập -->
+    <div class="section-tabs">
+      <button class="tab-btn active" id="tab1" onclick="switchSection(1)">1. Ôn Từ Vựng</button>
+      <button class="tab-btn" id="tab2" onclick="switchSection(2)">2. Sắp Xếp Câu</button>
+      <button class="tab-btn" id="tab3" onclick="switchSection(3)">3. Luyện Gõ Câu</button>
+    </div>
+
+    <!-- Tùy chọn bài học linh hoạt -->
+    <div class="filter-card">
+      <div style="font-weight: bold; margin-bottom: 5px;">🎯 Chọn bài học:</div>
+      <div class="filter-row">
+        <select id="modeSelect" onchange="handleModeChange()">
+          <option value="single">Theo 1 bài cụ thể</option>
+          <option value="range">Tùy chọn dải bài (Ví dụ: 1 đến 2)</option>
+          <option value="all">Tất cả bài (Bài 1 - 30)</option>
         </select>
+
+        <!-- Khung chọn 1 bài -->
+        <span id="singleSelectBox">
+          <select id="singleLessonSelect" onchange="startRound()"></select>
+        </span>
+
+        <!-- Khung chọn tùy chỉnh dải bài (vd 1-2, 3-7...) -->
+        <span id="rangeSelectBox" class="hidden">
+          Từ Bài <input type="number" id="startLesson" value="1" min="1" max="30">
+          đến Bài <input type="number" id="endLesson" value="2" min="1" max="30">
+          <button style="padding: 7px 12px; border-radius: 8px; background: var(--secondary); color: white; border: none; font-weight: bold; cursor: pointer;" onclick="startRound()">Áp dụng</button>
+        </span>
       </div>
+    </div>
+
+    <div class="status-bar">
+      <div>Đang luyện: <span id="currentModeLabel" style="color: var(--primary);">Bài 1</span></div>
       <div class="hearts">❤ <span id="heartCount">5</span></div>
     </div>
 
@@ -99,20 +132,14 @@
     </div>
 
     <div id="quizArea">
-      <!-- Thẻ câu hỏi -->
       <div class="question-card">
         <span class="type-tag" id="typeTag">Loại bài tập</span>
-        <div class="question-text" id="questionTitle">Nội dung câu hỏi</div>
+        <div class="question-text" id="questionTitle">Nội dung</div>
         <div class="sub-text" id="questionSub">Hướng dẫn</div>
       </div>
 
-      <!-- Khu vực làm bài -->
       <div id="interactiveArea"></div>
-
-      <!-- Khung phản hồi Đúng/Sai -->
       <div id="feedback" class="feedback-box hidden"></div>
-
-      <!-- Nút Kiểm tra / Câu tiếp theo -->
       <button class="btn-main" id="actionBtn" onclick="handleAction()">Kiểm tra</button>
     </div>
   </div>
@@ -123,13 +150,13 @@
   let currentQueue = [];
   let mistakeQueue = [];
   let currentItem = null;
-  let currentType = 1; // 1: Ôn từ, 2: Xếp câu, 3: Luyện gõ
+  let activeSection = 1; // 1: Ôn từ, 2: Xếp câu, 3: Luyện gõ
   let hearts = 5;
   let totalInRound = 0;
   let completedInRound = 0;
   let isAnswered = false;
 
-  // Web Audio Synthesizer (Tạo tiếng Ting / Bíp)
+  // Web Audio Synth
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -139,8 +166,8 @@
     gain.connect(audioCtx.destination);
 
     if (type === 'correct') {
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
       gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.35);
@@ -154,11 +181,11 @@
     }
   }
 
-  // 1. Tải file Excel HSK1_flashcards_theo_bai.xlsx từ GitHub
+  // Tải file Excel HSK1_flashcards_theo_bai.xlsx
   window.onload = function() {
     fetch('HSK1_flashcards_theo_bai.xlsx')
       .then(res => {
-        if (!res.ok) throw new Error("Không tìm thấy file Excel");
+        if (!res.ok) throw new Error("Lỗi tải file");
         return res.arrayBuffer();
       })
       .then(buffer => {
@@ -166,9 +193,9 @@
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet);
         
-        // Chuẩn hóa tên cột
         rawData = json.map(r => ({
-          lesson: String(r['Bài'] || '').trim(),
+          lessonNum: parseInt(String(r['Bài'] || '').replace(/\D/g, '')) || 1,
+          lessonStr: String(r['Bài'] || '').trim(),
           vocab: String(r['Từ'] || '').trim(),
           pinyin: String(r['Pinyin'] || '').trim(),
           meaning: String(r['Nghĩa tiếng Việt'] || '').trim(),
@@ -177,73 +204,78 @@
           example_pinyin: r['Ví dụ pinyin'] ? String(r['Ví dụ pinyin']).trim() : ''
         })).filter(item => item.vocab && item.meaning);
 
-        initModeOptions();
+        populateSingleLessons();
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
-        loadSavedProgress();
         startRound();
       })
       .catch(err => {
         document.getElementById('loading').innerHTML = `
           <div style="color:red; text-align:left;">
-            ⚠️ <b>Không tìm thấy file HSK1_flashcards_theo_bai.xlsx!</b><br><br>
-            Hãy chắc chắn bạn đã <b>Upload</b> file Excel tên chính xác <code>HSK1_flashcards_theo_bai.xlsx</code> lên cùng thư mục với file <code>index.html</code> này trên GitHub.
+            ⚠️ <b>Chưa tìm thấy file HSK1_flashcards_theo_bai.xlsx!</b><br>
+            Hãy chắc chắn bạn đã upload file Excel tên <code>HSK1_flashcards_theo_bai.xlsx</code> lên GitHub.
           </div>`;
       });
   };
 
-  // 2. Khởi tạo danh sách chế độ chọn bài
-  function initModeOptions() {
-    const select = document.getElementById('modeSelect');
+  function populateSingleLessons() {
+    const select = document.getElementById('singleLessonSelect');
     select.innerHTML = '';
-
-    // Danh sách các bài
-    const lessons = [...new Set(rawData.map(i => i.lesson))];
-    
-    // Tùy chọn 5 bài một
-    select.innerHTML += `<option value="all">🌐 Tổng hợp tất cả bài</option>`;
-    select.innerHTML += `<option value="group_1_5">📚 Bài 1 đến Bài 5</option>`;
-    select.innerHTML += `<option value="group_6_10">📚 Bài 6 đến Bài 10</option>`;
-    select.innerHTML += `<option value="group_11_15">📚 Bài 11 đến Bài 15</option>`;
-    select.innerHTML += `<option value="group_16_20">📚 Bài 16 đến Bài 20</option>`;
-    select.innerHTML += `<option value="group_21_25">📚 Bài 21 đến Bài 25</option>`;
-    select.innerHTML += `<option value="group_26_30">📚 Bài 26 đến Bài 30</option>`;
-
-    lessons.forEach(l => {
-      select.innerHTML += `<option value="${l}">📖 ${l}</option>`;
+    const lessons = [...new Set(rawData.map(i => i.lessonNum))].sort((a,b)=>a-b);
+    lessons.forEach(num => {
+      select.innerHTML += `<option value="${num}">Bài ${num}</option>`;
     });
   }
 
-  function changeMode() {
-    localStorage.setItem('hsk1_selected_mode', document.getElementById('modeSelect').value);
+  // Chuyển đổi 3 Phần Bài Tập
+  function switchSection(sec) {
+    activeSection = sec;
+    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+      if (idx + 1 === sec) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
     startRound();
   }
 
-  function loadSavedProgress() {
-    const savedMode = localStorage.getItem('hsk1_selected_mode');
-    if (savedMode) document.getElementById('modeSelect').value = savedMode;
+  function handleModeChange() {
+    const mode = document.getElementById('modeSelect').value;
+    document.getElementById('singleSelectBox').className = mode === 'single' ? '' : 'hidden';
+    document.getElementById('rangeSelectBox').className = mode === 'range' ? '' : 'hidden';
+    startRound();
   }
 
-  // 3. Bắt đầu lượt học
+  // Lọc bài tập và bắt đầu
   function startRound() {
     const mode = document.getElementById('modeSelect').value;
     let filtered = [];
+    let label = '';
 
-    if (mode === 'all') {
-      filtered = [...rawData];
-    } else if (mode.startsWith('group_')) {
-      const parts = mode.split('_');
-      const start = parseInt(parts[1]);
-      const end = parseInt(parts[2]);
-      filtered = rawData.filter(i => {
-        const num = parseInt(i.lesson.replace(/\D/g, ''));
-        return num >= start && num <= end;
-      });
+    if (mode === 'single') {
+      const selectedNum = parseInt(document.getElementById('singleLessonSelect').value);
+      filtered = rawData.filter(i => i.lessonNum === selectedNum);
+      label = `Bài ${selectedNum}`;
+    } else if (mode === 'range') {
+      const start = parseInt(document.getElementById('startLesson').value) || 1;
+      const end = parseInt(document.getElementById('endLesson').value) || 1;
+      filtered = rawData.filter(i => i.lessonNum >= start && i.lessonNum <= end);
+      label = `Bài ${start} ➔ Bài ${end}`;
     } else {
-      filtered = rawData.filter(i => i.lesson === mode);
+      filtered = [...rawData];
+      label = `Tất cả 30 Bài`;
     }
 
-    // Xáo trộn danh sách câu hỏi
+    // Nếu chọn phần 2 hoặc phần 3 thì lọc loại các từ không có ví dụ
+    if (activeSection === 2 || activeSection === 3) {
+      filtered = filtered.filter(i => i.example_cn && i.example_vi);
+    }
+
+    document.getElementById('currentModeLabel').innerText = label;
+
+    if (filtered.length === 0) {
+      alert("Không tìm thấy dữ liệu từ vựng cho bài học này!");
+      return;
+    }
+
     currentQueue = filtered.sort(() => Math.random() - 0.5);
     mistakeQueue = [];
     totalInRound = currentQueue.length;
@@ -259,7 +291,6 @@
     document.getElementById('progressBar').style.width = `${Math.min(pct, 100)}%`;
   }
 
-  // 4. Sinh bài tập tiếp theo
   function nextQuestion() {
     isAnswered = false;
     document.getElementById('feedback').className = 'feedback-box hidden';
@@ -267,57 +298,45 @@
 
     if (currentQueue.length === 0) {
       if (mistakeQueue.length > 0) {
-        alert("🔄 Bây giờ chúng ta sẽ luyện tập lại các câu bạn làm chưa đúng nhé!");
+        alert("🔄 Giỏi lắm! Giờ chúng ta ôn lại các câu bạn chọn chưa chính xác nhé!");
         currentQueue = [...mistakeQueue];
         mistakeQueue = [];
         nextQuestion();
         return;
       }
 
-      // Hoàn thành xuất sắc
       document.getElementById('quizArea').innerHTML = `
         <div style="text-align:center; padding: 30px 10px;">
           <div style="font-size:60px;">🎉</div>
-          <h2>XUẤT SẮC! BẠN ĐÃ HOÀN THÀNH BÀI HỌC!</h2>
-          <p>Bạn đã ghi nhớ rất tốt các từ vựng và câu HSK1.</p>
-          <button class="btn-main" onclick="location.reload()">Học bài khác</button>
+          <h2>HOÀN THÀNH XUẤT SẮC!</h2>
+          <p>Bạn đã hoàn tất phần bài tập được chọn.</p>
+          <button class="btn-main" onclick="location.reload()">Chọn bài học khác</button>
         </div>
       `;
       return;
     }
 
     currentItem = currentQueue.shift();
-
-    // Quyết định dạng bài tập (1: Ôn từ, 2: Sắp xếp câu, 3: Luyện gõ)
-    // Nếu item không có câu ví dụ thì bắt buộc chọn dạng 1 (Ôn từ)
-    if (!currentItem.example_cn || !currentItem.example_vi) {
-      currentType = 1;
-    } else {
-      currentType = Math.floor(Math.random() * 3) + 1;
-    }
-
     renderQuiz();
   }
 
-  // 5. Hiển thị giao diện bài tập
   function renderQuiz() {
     const area = document.getElementById('interactiveArea');
     area.innerHTML = '';
 
-    if (currentType === 1) {
-      // PART 1: ÔN TỪ VỰNG (2 Chiều)
+    if (activeSection === 1) {
+      // PHẦN 1: ÔN TỪ VỰNG
       const isCnToVi = Math.random() > 0.5;
       document.getElementById('typeTag').innerText = "PHẦN 1: ÔN TẬP TỪ VỰNG";
 
       if (isCnToVi) {
         document.getElementById('questionTitle').innerText = `${currentItem.vocab} (${currentItem.pinyin})`;
-        document.getElementById('questionSub').innerText = "Chọn nghĩa tiếng Việt chính xác:";
+        document.getElementById('questionSub').innerText = "Chọn nghĩa tiếng Việt tương ứng:";
       } else {
         document.getElementById('questionTitle').innerText = currentItem.meaning;
         document.getElementById('questionSub').innerText = "Chọn từ tiếng Trung tương ứng:";
       }
 
-      // Tạo 3 phương án lựa chọn
       let distractors = rawData.filter(i => i.vocab !== currentItem.vocab).sort(() => Math.random() - 0.5).slice(0, 2);
       let options = [currentItem, ...distractors].sort(() => Math.random() - 0.5);
 
@@ -333,17 +352,15 @@
       });
       area.appendChild(grid);
 
-    } else if (currentType === 2) {
-      // PART 2: SẮP XẾP CÂU (Kèm Pinyin)
+    } else if (activeSection === 2) {
+      // PHẦN 2: SẮP XẾP CÂU
       document.getElementById('typeTag').innerText = "PHẦN 2: SẮP XẾP CÂU";
       document.getElementById('questionTitle').innerText = currentItem.example_vi;
-      document.getElementById('questionSub').innerText = "Bấm các khối từ để xếp thành câu tiếng Trung đúng:";
+      document.getElementById('questionSub').innerText = "Bấm chọn từ để ghép thành câu tiếng Trung đúng:";
 
-      // Tách từ (đơn giản theo từng ký tự/từ)
       let cnWords = currentItem.example_cn.replace(/[。？！，,.?!]/g, '').split('');
       let pyWords = currentItem.example_pinyin.split(' ');
 
-      // Tạo danh sách chip từ
       let chips = cnWords.map((char, idx) => ({
         hanzi: char,
         pinyin: pyWords[idx] || ''
@@ -360,26 +377,22 @@
       chips.forEach((c, i) => {
         let chip = document.createElement('div');
         chip.className = 'word-chip';
-        chip.id = `chip_${i}`;
         chip.innerHTML = `${c.hanzi} <span class="py">${c.pinyin}</span>`;
         chip.onclick = () => {
-          if (chip.parentElement.id === 'poolArea') {
-            targetArea.appendChild(chip);
-          } else {
-            poolArea.appendChild(chip);
-          }
+          if (chip.parentElement.id === 'poolArea') targetArea.appendChild(chip);
+          else poolArea.appendChild(chip);
         };
         poolArea.appendChild(chip);
       });
 
-    } else if (currentType === 3) {
-      // PART 3: LUYỆN GÕ CHỮ HÁN
-      document.getElementById('typeTag').innerText = "PHẦN 3: LUYỆN GÕ CHỮ HÁN";
-      document.getElementById('questionTitle').innerText = currentItem.example_vi || currentItem.meaning;
-      document.getElementById('questionSub').innerText = "Sử dụng bàn phím Pinyin để gõ lại toàn bộ câu/từ tiếng Trung:";
+    } else if (activeSection === 3) {
+      // PHẦN 3: LUYỆN GÕ CÂU
+      document.getElementById('typeTag').innerText = "PHẦN 3: LUYỆN GÕ CÂU";
+      document.getElementById('questionTitle').innerText = currentItem.example_vi;
+      document.getElementById('questionSub').innerText = "Gõ câu tiếng Trung bằng bàn phím Pinyin:";
 
       area.innerHTML = `
-        <input type="text" id="typeInput" placeholder="Gõ Chữ Hán vào đây..." autocomplete="off">
+        <input type="text" id="typeInput" placeholder="Gõ chữ Hán vào đây..." autocomplete="off">
       `;
     }
   }
@@ -394,7 +407,6 @@
     isOptionCorrect = isCorrect;
   }
 
-  // 6. Xử lý khi bấm nút "KIỂM TRA" / "CÂU TIẾP THEO"
   function handleAction() {
     if (isAnswered) {
       completedInRound++;
@@ -406,21 +418,21 @@
     let isCorrect = false;
     let correctAnswerText = '';
 
-    if (currentType === 1) {
+    if (activeSection === 1) {
       if (!selectedOption) { alert("Vui lòng chọn 1 đáp án!"); return; }
       isCorrect = isOptionCorrect;
       correctAnswerText = `${currentItem.vocab} (${currentItem.pinyin}) : ${currentItem.meaning}`;
-    } else if (currentType === 2) {
+    } else if (activeSection === 2) {
       const userSentence = Array.from(document.getElementById('targetArea').children)
         .map(el => el.childNodes[0].textContent.trim()).join('');
       const cleanTarget = currentItem.example_cn.replace(/[。？！，,.?!]/g, '').trim();
       isCorrect = (userSentence === cleanTarget);
       correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
-    } else if (currentType === 3) {
+    } else if (activeSection === 3) {
       const val = document.getElementById('typeInput').value.trim().replace(/[。？！，,.?!]/g, '');
-      const target = (currentItem.example_cn || currentItem.vocab).replace(/[。？！，,.?!]/g, '').trim();
+      const target = currentItem.example_cn.replace(/[。？！，,.?!]/g, '').trim();
       isCorrect = (val === target);
-      correctAnswerText = currentItem.example_cn || currentItem.vocab;
+      correctAnswerText = currentItem.example_cn;
     }
 
     const feedback = document.getElementById('feedback');
@@ -429,14 +441,14 @@
     if (isCorrect) {
       playSound('correct');
       feedback.className = 'feedback-box correct';
-      feedback.innerHTML = '🎉 Chính xác! Bạn làm tốt lắm!';
+      feedback.innerHTML = '🎉 Chính xác! Bạn làm xuất sắc lắm!';
     } else {
       playSound('wrong');
       hearts--;
       document.getElementById('heartCount').innerText = Math.max(0, hearts);
       feedback.className = 'feedback-box wrong';
       feedback.innerHTML = `❌ Chưa chính xác!<br><small>Đáp án đúng: <b>${correctAnswerText}</b></small>`;
-      mistakeQueue.push(currentItem); // Gom vào danh sách sai để luyện lại
+      mistakeQueue.push(currentItem);
     }
 
     isAnswered = true;
