@@ -61,7 +61,7 @@
     .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
     
     .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 12px; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
-    .word-chip span.py { font-size: 11px; color: #666; font-weight: normal; margin-top: 2px; }
+    .word-chip span.py { font-size: 12px; color: #008a00; font-weight: bold; margin-top: 2px; }
 
     /* Typing Input */
     input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
@@ -163,6 +163,7 @@
   let totalInRound = 0;
   let completedInRound = 0;
   let isAnswered = false;
+  let vocabMap = {};
 
   let stats = { correctFirstTry: 0, wrongCount: 0, mistakes: [] };
 
@@ -224,6 +225,13 @@
           example_cn: r['Ví dụ tiếng Trung'] ? String(r['Ví dụ tiếng Trung']).trim() : '',
           example_pinyin: r['Ví dụ pinyin'] ? String(r['Ví dụ pinyin']).trim() : ''
         })).filter(item => item.vocab && item.meaning);
+
+        // Tạo từ điển tra cứu Pinyin cho từng chữ Hán
+        rawData.forEach(item => {
+          if (item.vocab && item.pinyin) {
+            vocabMap[item.vocab] = item.pinyin;
+          }
+        });
 
         populateSingleLessons();
         document.getElementById('loading').classList.add('hidden');
@@ -340,6 +348,30 @@
     renderQuiz();
   }
 
+  // Hàm tách Pinyin thông minh kết hợp từ điển tra cứu
+  function getPinyinArray(sentence, rawPinyin) {
+    let cleanSentence = cleanPunctuation(sentence);
+    let chars = cleanSentence.split('');
+    let result = [];
+
+    let pinyinWords = rawPinyin ? rawPinyin.trim().split(/\s+/) : [];
+
+    if (pinyinWords.length === chars.length) {
+      return pinyinWords;
+    }
+
+    // Nếu không khớp độ dài, tự động tra cứu Pinyin theo từng chữ Hán
+    chars.forEach(char => {
+      if (vocabMap[char]) {
+        result.push(vocabMap[char]);
+      } else {
+        result.push(''); // Nếu không tìm thấy
+      }
+    });
+
+    return result;
+  }
+
   function renderQuiz() {
     const area = document.getElementById('interactiveArea');
     area.innerHTML = '';
@@ -381,17 +413,10 @@
       let cleanSentence = cleanPunctuation(currentItem.example_cn);
       let cnWords = cleanSentence.split('');
       
-      // Xử lý tách Pinyin thông minh (nếu Pinyin bị viết liền)
-      let pyParts = currentItem.example_pinyin.trim().split(/\s+/);
+      let pyParts = getPinyinArray(currentItem.example_cn, currentItem.example_pinyin);
       
       let chips = cnWords.map((char, idx) => {
-        let py = '';
-        if (pyParts.length === cnWords.length) {
-          py = pyParts[idx];
-        } else {
-          py = ''; // Để trống nếu pinyin viết liền toàn câu
-        }
-        return { hanzi: char, pinyin: py };
+        return { hanzi: char, pinyin: pyParts[idx] || '' };
       }).sort(() => Math.random() - 0.5);
 
       area.innerHTML = `
