@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>review hsk1_Ms QA</title>
+  <title>Review HSK1_Ms QA</title>
 
   <meta property="og:title" content="review hsk1_Ms QA">
   <meta property="og:description" content="Chương Trình Ôn Tập Từ Vựng & Câu Từ">
@@ -86,8 +86,8 @@
 
 <div class="container">
   <header>
-    <h1>📚 review hsk1_Ms QA</h1>
-    <div class="subtitle">Chương Trình Ôn Tập Từ Vựng & Câu Từ</div>
+    <h1>📚 Review HSK1_Ms QA</h1>
+    <div class="subtitle">Ôn Tập Từ Vựng & Câu Từ</div>
   </header>
 
   <div id="loading">⏳ Đang tải dữ liệu từ file <b>HSK1_flashcards_theo_bai.xlsx</b>...</div>
@@ -290,10 +290,9 @@
       filtered = filtered.filter(i => i.example_pinyin && i.example_vi);
       currentQueue = filtered.map(item => ({ ...item, taskType: 'sentence' })).sort(() => Math.random() - 0.5);
     } else if (activeSection === 3) {
-      // PHẦN 3: TẠO CẢ TỪ VỰNG VÀ CÂU VÍ DỤ RỒI XÁO TRỘN NGẪU NHIÊN
       let typingList = [];
       filtered.forEach(item => {
-        // Thêm câu hỏi gõ TỪ VỰNG
+        // Câu hỏi gõ TỪ VỰNG
         typingList.push({
           taskType: 'vocab',
           questionVi: item.meaning,
@@ -302,7 +301,7 @@
           rawItem: item
         });
 
-        // Nếu dòng đó có VÍ DỤ CÂU thì thêm luôn câu hỏi gõ CÂU VÍ DỤ
+        // Câu hỏi gõ CÂU VÍ DỤ
         if (item.example_cn && item.example_vi) {
           typingList.push({
             taskType: 'sentence',
@@ -314,7 +313,7 @@
         }
       });
 
-      // Xáo trộn ngẫu nhiên toàn bộ danh sách câu hỏi gõ từ & gõ câu
+      // Xáo trộn ngẫu nhiên toàn bộ
       currentQueue = typingList.sort(() => Math.random() - 0.5);
     } else {
       currentQueue = filtered.map(item => ({ ...item, taskType: 'vocab' })).sort(() => Math.random() - 0.5);
@@ -416,15 +415,15 @@
       });
 
     } else if (activeSection === 3) {
-      // PHẦN 3: HIỂN THỊ CÂU HỎI TỪ VỰNG HOẶC CÂU
+      // KHÔNG HIỂN THỊ PINYIN TRONG CÂU HỎI
       if (currentItem.taskType === 'vocab') {
         document.getElementById('typeTag').innerText = "📝 LUYỆN GÕ: TỪ VỰNG";
         document.getElementById('questionTitle').innerText = currentItem.questionVi;
-        document.getElementById('questionSub').innerText = `Gõ từ Hán ngữ tương ứng (Pinyin: ${currentItem.pinyinHint}):`;
+        document.getElementById('questionSub').innerText = "Hãy gõ từ tiếng Trung tương ứng:";
       } else {
         document.getElementById('typeTag').innerText = "💬 LUYỆN GÕ: CÂU VÍ DỤ";
         document.getElementById('questionTitle').innerText = currentItem.questionVi;
-        document.getElementById('questionSub').innerText = `Gõ câu tiếng Trung hoàn chỉnh (Pinyin: ${currentItem.pinyinHint}):`;
+        document.getElementById('questionSub').innerText = "Hãy gõ câu tiếng Trung hoàn chỉnh:";
       }
 
       area.innerHTML = `
