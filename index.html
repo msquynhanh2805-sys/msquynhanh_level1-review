@@ -154,7 +154,6 @@
   let totalInRound = 0;
   let completedInRound = 0;
   let isAnswered = false;
-  let typingType = 'vocab'; // 'vocab' hoặc 'sentence'
 
   function cleanPunctuation(str) {
     if (!str) return '';
@@ -280,10 +279,6 @@
       label = `Tất cả 30 Bài`;
     }
 
-    if (activeSection === 2) {
-      filtered = filtered.filter(i => i.example_pinyin && i.example_vi);
-    }
-
     document.getElementById('currentModeLabel').innerText = label;
 
     if (filtered.length === 0) {
@@ -291,7 +286,40 @@
       return;
     }
 
-    currentQueue = filtered.sort(() => Math.random() - 0.5);
+    if (activeSection === 2) {
+      filtered = filtered.filter(i => i.example_pinyin && i.example_vi);
+      currentQueue = filtered.map(item => ({ ...item, taskType: 'sentence' })).sort(() => Math.random() - 0.5);
+    } else if (activeSection === 3) {
+      // PHẦN 3: TẠO CẢ TỪ VỰNG VÀ CÂU VÍ DỤ RỒI XÁO TRỘN NGẪU NHIÊN
+      let typingList = [];
+      filtered.forEach(item => {
+        // Thêm câu hỏi gõ TỪ VỰNG
+        typingList.push({
+          taskType: 'vocab',
+          questionVi: item.meaning,
+          targetCn: item.vocab,
+          pinyinHint: item.pinyin,
+          rawItem: item
+        });
+
+        // Nếu dòng đó có VÍ DỤ CÂU thì thêm luôn câu hỏi gõ CÂU VÍ DỤ
+        if (item.example_cn && item.example_vi) {
+          typingList.push({
+            taskType: 'sentence',
+            questionVi: item.example_vi,
+            targetCn: item.example_cn,
+            pinyinHint: item.example_pinyin,
+            rawItem: item
+          });
+        }
+      });
+
+      // Xáo trộn ngẫu nhiên toàn bộ danh sách câu hỏi gõ từ & gõ câu
+      currentQueue = typingList.sort(() => Math.random() - 0.5);
+    } else {
+      currentQueue = filtered.map(item => ({ ...item, taskType: 'vocab' })).sort(() => Math.random() - 0.5);
+    }
+
     mistakeQueue = [];
     recordHistory = [];
     totalInRound = currentQueue.length;
@@ -388,24 +416,24 @@
       });
 
     } else if (activeSection === 3) {
-      // PHẦN 3: LUYỆN GÕ (GÕ CẢ TỪ VỰNG VÀ CÂU)
-      document.getElementById('typeTag').innerText = "PHẦN 3: LUYỆN GÕ HÁN TỰ";
-      
-      // Tự động luân phiên hoặc ưu tiên gõ câu nếu có ví dụ, nếu không thì gõ từ vựng
-      if (currentItem.example_cn && currentItem.example_vi && Math.random() > 0.4) {
-        typingType = 'sentence';
-        document.getElementById('questionTitle').innerText = currentItem.example_vi;
-        document.getElementById('questionSub').innerText = `Gõ câu tiếng Trung bằng Pinyin (${currentItem.example_pinyin}):`;
+      // PHẦN 3: HIỂN THỊ CÂU HỎI TỪ VỰNG HOẶC CÂU
+      if (currentItem.taskType === 'vocab') {
+        document.getElementById('typeTag').innerText = "📝 LUYỆN GÕ: TỪ VỰNG";
+        document.getElementById('questionTitle').innerText = currentItem.questionVi;
+        document.getElementById('questionSub').innerText = `Gõ từ Hán ngữ tương ứng (Pinyin: ${currentItem.pinyinHint}):`;
       } else {
-        typingType = 'vocab';
-        document.getElementById('questionTitle').innerText = `${currentItem.meaning}`;
-        document.getElementById('questionSub').innerText = `Gõ từ tiếng Trung bằng Pinyin (${currentItem.pinyin}):`;
+        document.getElementById('typeTag').innerText = "💬 LUYỆN GÕ: CÂU VÍ DỤ";
+        document.getElementById('questionTitle').innerText = currentItem.questionVi;
+        document.getElementById('questionSub').innerText = `Gõ câu tiếng Trung hoàn chỉnh (Pinyin: ${currentItem.pinyinHint}):`;
       }
 
       area.innerHTML = `
         <input type="text" id="typeInput" placeholder="Gõ chữ Hán vào đây..." autocomplete="off">
       `;
-      setTimeout(() => document.getElementById('typeInput').focus(), 100);
+      setTimeout(() => {
+        const inp = document.getElementById('typeInput');
+        if (inp) inp.focus();
+      }, 100);
     }
   }
 
@@ -444,16 +472,9 @@
       correctAnswerText = currentItem.example_pinyin;
     } else if (activeSection === 3) {
       const val = document.getElementById('typeInput').value;
-      
-      if (typingType === 'vocab') {
-        const cleanTarget = cleanPunctuation(currentItem.vocab);
-        isCorrect = (cleanPunctuation(val) === cleanTarget);
-        correctAnswerText = `${currentItem.vocab} (${currentItem.pinyin})`;
-      } else {
-        const cleanTarget = cleanPunctuation(currentItem.example_cn);
-        isCorrect = (cleanPunctuation(val) === cleanTarget);
-        correctAnswerText = `${currentItem.example_cn} (${currentItem.example_pinyin})`;
-      }
+      const cleanTarget = cleanPunctuation(currentItem.targetCn);
+      isCorrect = (cleanPunctuation(val) === cleanTarget);
+      correctAnswerText = `${currentItem.targetCn} (${currentItem.pinyinHint})`;
     }
 
     recordHistory.push({
@@ -492,9 +513,10 @@
     if (wrongList.length > 0) {
       wrongDetailsHtml = `<div style="margin-top:15px; font-weight:bold; color: var(--danger);">Các câu/từ cần ôn lại:</div>`;
       wrongList.forEach(w => {
+        const titleShow = w.item.questionVi || w.item.vocab || w.item.example_vi;
         wrongDetailsHtml += `
           <div class="wrong-item">
-            📌 <b>${w.item.vocab} (${w.item.meaning})</b><br>
+            📌 <b>${titleShow}</b><br>
             Đáp án đúng: <i>${w.correctText}</i>
           </div>
         `;
@@ -503,7 +525,7 @@
       wrongDetailsHtml = `<div style="margin-top:15px; color: var(--primary); font-weight:bold;">🌟 Tuyệt vời! Bạn không làm sai câu nào cả!</div>`;
     }
 
-    const sectionName = activeSection === 1 ? 'Ôn Từ Vựng' : (activeSection === 2 ? 'Sắp Xếp Câu (Pinyin)' : 'Luyện Gõ Hán Tự');
+    const sectionName = activeSection === 1 ? 'Ôn Từ Vựng' : (activeSection === 2 ? 'Sắp Xếp Câu (Pinyin)' : 'Luyện Gõ Từ & Câu');
 
     document.getElementById('quizArea').innerHTML = `
       <div style="text-align:center;">
