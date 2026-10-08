@@ -339,7 +339,34 @@ const LESSON_DATA = [{"lesson":1,"title":"Bài 1","vocab":[{"cn":"你好","py":"
         speechSynthesis.speak(m);
       } catch (e) {}
     }
-
+ // ---------- Đọc tiếng Trung (Web Speech API, ưu tiên zh-CN) ----------
+    const HAS_TTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+    let ZH_VOICE = null;
+    function pickVoice() {
+      if (!HAS_TTS) return;
+      const vs = speechSynthesis.getVoices();
+      ZH_VOICE = vs.find(v => /^zh[-_]CN/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
+    }
+    if (HAS_TTS) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {} }
+    const ttsText = s => stripParen(s).replace(/…+/g, '，').replace(/[，。？！、\s]+$/, '');
+    // Nhận biết trình duyệt trong Zalo; nếu không đọc được thì báo cho học viên (chỉ báo 1 lần)
+    const IN_ZALO = /Zalo/i.test(navigator.userAgent || '');
+    let zaloWarned = false;
+    function zaloNotice() {
+      if (zaloWarned) return; zaloWarned = true;
+      notice('声音 · Âm thanh', 'Trình duyệt trong Zalo có thể chặn âm thanh. Hãy bấm ⋯ ở góc phải rồi chọn “Mở bằng trình duyệt” (Chrome/Safari) để nghe phát âm nhé.\n在 Zalo 里可能无法播放声音，请点右上角 ⋯ →「用浏览器打开」。');
+    }
+    function speakZh(txt, rate) {
+      if (!HAS_TTS || !txt) { if (IN_ZALO) zaloNotice(); return; }
+      try {
+        speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(txt);
+        m.lang = 'zh-CN'; if (ZH_VOICE) m.voice = ZH_VOICE; m.rate = rate || .85;
+        let started = false; m.onstart = () => { started = true; };
+        speechSynthesis.speak(m);
+        if (IN_ZALO) setTimeout(() => { if (!started) zaloNotice(); }, 1500);
+      } catch (e) { if (IN_ZALO) zaloNotice(); }
+    }
     // ---------- Âm thanh hiệu ứng (tạo bằng Web Audio, không cần file) ----------
     let AC = null, SOUND = LS.get('hsk1_sound', true);
     function ac() {
