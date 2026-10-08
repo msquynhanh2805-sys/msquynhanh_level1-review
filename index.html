@@ -339,34 +339,7 @@ const LESSON_DATA = [{"lesson":1,"title":"Bài 1","vocab":[{"cn":"你好","py":"
         speechSynthesis.speak(m);
       } catch (e) {}
     }
- // ---------- Đọc tiếng Trung (Web Speech API, ưu tiên zh-CN) ----------
-    const HAS_TTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-    let ZH_VOICE = null;
-    function pickVoice() {
-      if (!HAS_TTS) return;
-      const vs = speechSynthesis.getVoices();
-      ZH_VOICE = vs.find(v => /^zh[-_]CN/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
-    }
-    if (HAS_TTS) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {} }
-    const ttsText = s => stripParen(s).replace(/…+/g, '，').replace(/[，。？！、\s]+$/, '');
-    // Nhận biết trình duyệt trong Zalo; nếu không đọc được thì báo cho học viên (chỉ báo 1 lần)
-    const IN_ZALO = /Zalo/i.test(navigator.userAgent || '');
-    let zaloWarned = false;
-    function zaloNotice() {
-      if (zaloWarned) return; zaloWarned = true;
-      notice('声音 · Âm thanh', 'Trình duyệt trong Zalo có thể chặn âm thanh. Hãy bấm ⋯ ở góc phải rồi chọn “Mở bằng trình duyệt” (Chrome/Safari) để nghe phát âm nhé.\n在 Zalo 里可能无法播放声音，请点右上角 ⋯ →「用浏览器打开」。');
-    }
-    function speakZh(txt, rate) {
-      if (!HAS_TTS || !txt) { if (IN_ZALO) zaloNotice(); return; }
-      try {
-        speechSynthesis.cancel();
-        const m = new SpeechSynthesisUtterance(txt);
-        m.lang = 'zh-CN'; if (ZH_VOICE) m.voice = ZH_VOICE; m.rate = rate || .85;
-        let started = false; m.onstart = () => { started = true; };
-        speechSynthesis.speak(m);
-        if (IN_ZALO) setTimeout(() => { if (!started) zaloNotice(); }, 1500);
-      } catch (e) { if (IN_ZALO) zaloNotice(); }
-    }
+
     // ---------- Âm thanh hiệu ứng (tạo bằng Web Audio, không cần file) ----------
     let AC = null, SOUND = LS.get('hsk1_sound', true);
     function ac() {
@@ -816,48 +789,6 @@ const LESSON_DATA = [{"lesson":1,"title":"Bài 1","vocab":[{"cn":"你好","py":"
     // ---------- Khởi động ----------
     LS.del('hsk1_progress_saved'); // phiên cũ ở định dạng cũ, không tương thích
     soundIcon(); showWelcome(true);
-     // ===== SỬA ÂM THANH TRONG ZALO (dán ở cuối, ghi đè hàm cũ) =====
-$('zaloHint').classList.add('hidden');   // ẩn thông báo ở đầu trang
-
-let lastClickAt = 0;
-document.addEventListener('click', () => { lastClickAt = Date.now(); }, true);
-
-let ttsAudio = null;
-function playOnline(txt) {
-  return new Promise(resolve => {
-    try {
-      if (ttsAudio) ttsAudio.pause();
-      const a = new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN&q=' + encodeURIComponent(txt));
-      ttsAudio = a;
-      a.onerror = () => resolve(false);
-      const p = a.play();
-      p && p.then ? p.then(() => resolve(true)).catch(() => resolve(false)) : resolve(true);
-    } catch (e) { resolve(false); }
-  });
-}
-function playNative(txt, rate) {
-  return new Promise(resolve => {
-    if (!HAS_TTS) return resolve(false);
-    try {
-      speechSynthesis.cancel();
-      const m = new SpeechSynthesisUtterance(txt);
-      m.lang = 'zh-CN'; if (ZH_VOICE) m.voice = ZH_VOICE; m.rate = rate || .85;
-      let started = false;
-      m.onstart = () => { started = true; resolve(true); };
-      m.onerror = () => resolve(false);
-      speechSynthesis.speak(m);
-      setTimeout(() => { if (!started) { try { speechSynthesis.cancel(); } catch (e) {} resolve(false); } }, 1500);
-    } catch (e) { resolve(false); }
-  });
-}
-async function speakZh(txt, rate) {
-  if (!txt) return;
-  const byUser = Date.now() - lastClickAt < 250;   // đúng là người dùng vừa bấm loa
-  let ok = false;
-  if (IN_ZALO) { ok = await playOnline(txt); if (!ok) ok = await playNative(txt, rate); }
-  else         { ok = await playNative(txt, rate); if (!ok) ok = await playOnline(txt); }
-  if (!ok && byUser && IN_ZALO) zaloNotice();      // chỉ báo khi bấm loa mà vẫn không nghe được
-}
   </script>
 </body>
 </html>
