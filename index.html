@@ -3,567 +3,792 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Review HSK1_Ms QA</title>
-
-  <meta property="og:title" content="review hsk1_Ms QA">
-  <meta property="og:description" content="Chương Trình Ôn Tập Từ Vựng & Câu Từ">
-  <meta property="og:type" content="website">
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
+  <title>Level 1 _ Ms QA.Hantalk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
-    :root {
-      --primary: #00b900;
-      --primary-dark: #008a00;
-      --secondary: #1cb0f6;
-      --danger: #ff4b4b;
-      --gray-bg: #f7f7f7;
-      --card-border: #e5e5e5;
-      --text: #3c3c3c;
-    }
+    body { font-family: 'Plus Jakarta Sans','Noto Sans SC',sans-serif; background: linear-gradient(135deg,#f0fdf4 0%,#e6fffa 50%,#f0f9ff 100%); min-height:100vh; color:#1e293b; user-select:none; }
+    .glass-card { background:rgba(255,255,255,.88); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,.7); box-shadow:0 20px 40px -15px rgba(20,184,166,.08),0 0 15px rgba(0,0,0,.02); }
+    .glass-modal { background:rgba(255,255,255,.95); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.8); box-shadow:0 25px 50px -12px rgba(15,23,42,.25); }
+    @keyframes float { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-8px) rotate(1deg)} }
+    @keyframes gentleBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    @keyframes ribbonShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+    @keyframes boxShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px) rotate(-3deg)} 40%{transform:translateX(6px) rotate(3deg)} 60%{transform:translateX(-4px) rotate(-2deg)} 80%{transform:translateX(4px) rotate(2deg)} }
+    @keyframes popIn { 0%{transform:scale(.92);opacity:0} 100%{transform:scale(1);opacity:1} }
+    @keyframes twinkle { 0%,100%{opacity:.15;transform:scale(.6)} 50%{opacity:1;transform:scale(1.1)} }
+    @keyframes burst { 0%{opacity:1;transform:translate(0,0) scale(.6)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.3)} }
+    .animate-float { animation:float 6s ease-in-out infinite; }
+    .animate-pop-in { animation:popIn .35s cubic-bezier(.16,1,.3,1) forwards; }
+    ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:rgba(0,0,0,.03)} ::-webkit-scrollbar-thumb{background:rgba(20,184,166,.3);border-radius:999px}
 
-    * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-    body { background-color: #f0f2f5; margin: 0; padding: 15px; color: var(--text); }
-    .container { max-width: 650px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-    
-    header { text-align: center; border-bottom: 2px solid var(--card-border); padding-bottom: 15px; margin-bottom: 15px; }
-    h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 26px; }
-    .subtitle { color: #666; font-size: 14px; font-weight: bold; }
+    /* Khung chữ ổn định cho câu chào / câu động viên (không nhảy layout) */
+    .msg-box { min-height:10.5rem; display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%; max-width:46rem; margin:0 auto; text-wrap:balance; }
+    .msg-cn { font-size:clamp(1.3rem,3.2vw,2rem); font-weight:800; line-height:1.5; color:#1e293b; }
+    .msg-vi { font-size:clamp(.9rem,2.4vw,1.15rem); font-weight:500; color:#0d9488; margin-top:.45rem; line-height:1.55; }
+    .decor { position:absolute; font-weight:700; color:rgba(20,184,166,.13); pointer-events:none; animation:float 7s ease-in-out infinite; }
+    .spark { position:absolute; pointer-events:none; animation:twinkle 2.6s ease-in-out infinite; }
 
-    .section-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 12px 5px; border: 2px solid var(--card-border); background: var(--gray-bg); border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; color: #555; text-align: center; transition: all 0.2s; }
-    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
-
-    .filter-card { background: #f8f9fa; border: 1px solid var(--card-border); border-radius: 12px; padding: 12px 15px; margin-bottom: 20px; }
-    .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
-    select, input[type="number"] { padding: 8px 10px; border-radius: 8px; border: 1px solid #ccc; font-weight: bold; outline: none; }
-    input[type="number"] { width: 70px; text-align: center; }
-
-    .status-bar { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; margin-bottom: 15px; }
-    .hearts { color: var(--danger); font-size: 18px; }
-    
-    .progress-container { width: 100%; background: #e5e5e5; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 20px; }
-    .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
-
-    .question-card { background: var(--gray-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; }
-    .type-tag { display: inline-block; background: var(--secondary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
-    .question-text { font-size: 22px; font-weight: bold; color: #111; margin: 10px 0; }
-    .sub-text { font-size: 15px; color: #666; }
-
-    .options-grid { display: grid; gap: 10px; margin-bottom: 20px; }
-    .btn-option { background: white; border: 2px solid var(--card-border); border-bottom-width: 4px; padding: 14px; border-radius: 12px; font-size: 17px; font-weight: bold; text-align: left; cursor: pointer; color: var(--text); }
-    .btn-option:hover { background: #f1f1f1; }
-
-    .word-pool, .sentence-target { display: flex; flex-wrap: wrap; gap: 8px; min-height: 55px; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
-    .sentence-target { background: #fff; border: 2px dashed #bbb; align-items: center; }
-    .word-pool { background: var(--gray-bg); border: 1px solid var(--card-border); }
-    
-    .word-chip { background: white; border: 2px solid var(--card-border); border-bottom-width: 3px; padding: 8px 14px; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; line-height: 1.2; user-select: none; }
-
-    input[type="text"] { width: 100%; padding: 14px; font-size: 18px; border: 2px solid var(--card-border); border-radius: 12px; outline: none; margin-bottom: 15px; }
-    input[type="text"]:focus { border-color: var(--secondary); }
-
-    .btn-main { width: 100%; background: var(--primary); color: white; border: none; border-bottom: 4px solid var(--primary-dark); padding: 14px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
-    .btn-main:hover { background: #00a000; }
-    .btn-secondary { background: var(--secondary); border-color: #0b93d5; }
-    .btn-secondary:hover { background: #139ad9; }
-
-    .hidden { display: none !important; }
-    
-    .feedback-box { padding: 15px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; text-align: center; }
-    .feedback-box.correct { background: #d7ffb8; color: #2b7000; border: 2px solid #a5ed6e; }
-    .feedback-box.wrong { background: #ffdfe0; color: #ea2b2b; border: 2px solid #ffc1c1; }
-
-    .report-card { background: #f8f9fa; border: 2px solid var(--card-border); border-radius: 16px; padding: 20px; margin: 15px 0; text-align: left; }
-    .report-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ddd; font-weight: bold; }
-    .wrong-item { background: #fff0f0; border-left: 4px solid var(--danger); padding: 8px 12px; margin-top: 6px; border-radius: 4px; font-size: 14px; }
-
-    #loading { text-align: center; font-size: 18px; color: #666; padding: 40px 0; }
+    /* Hộp quà */
+    .gift { width:min(11.5rem,28vw); cursor:pointer; position:relative; animation:gentleBounce 3s ease-in-out infinite; }
+    .gsvg { display:block; width:100%; transition:transform .25s,filter .25s,opacity .4s; }
+    .gift:hover .gsvg { transform:scale(1.08) rotate(-3deg); filter:drop-shadow(0 0 14px rgba(251,191,36,.75)); }
+    .gbow { transform-box:fill-box; transform-origin:center; animation:ribbonShake 3.2s ease-in-out infinite; }
+    .gift:hover .gbow { animation:ribbonShake .5s ease-in-out infinite; }
+    .glid { transform-box:fill-box; transform-origin:0% 100%; transition:transform .7s cubic-bezier(.2,.8,.2,1); }
+    .gift.opened { animation:none; pointer-events:none; }
+    .gift.opened .glid { transform:translate(-10px,-40px) rotate(-26deg); }
+    .gift.shaking .gsvg { animation:boxShake .5s ease-in-out; }
+    .gift.dim { opacity:.35; pointer-events:none; animation:none; }
+    .gift.dim .gsvg { filter:grayscale(.4); }
+    .burst { position:absolute; left:50%; top:35%; pointer-events:none; animation:burst .9s ease-out forwards; }
+    .quote-area { min-height:13rem; opacity:0; visibility:hidden; transform:translateY(8px); transition:opacity .5s,transform .5s,visibility .5s; }
+    .quote-area.show { opacity:1; visibility:visible; transform:none; }
+    /* Hiệu ứng nổi lên khi di chuột */
+    .lift,.lift-sm { transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,background-color .2s ease; }
+    .lift:hover { transform:translateY(-5px) scale(1.025); box-shadow:0 20px 36px -12px rgba(20,184,166,.38); border-color:#2dd4bf; background-color:rgba(240,253,250,.97); }
+    .lift-sm:hover { transform:translateY(-3px) scale(1.08); box-shadow:0 12px 22px -10px rgba(20,184,166,.45); border-color:#2dd4bf; background-color:#f0fdfa; }
+    .lift:active,.lift-sm:active { transform:scale(.97); }
+    #qChinese,#qVietnamese { text-wrap:balance; }
+    /* Dải giấy câu chào: hai trục cuộn kéo mở sang hai bên (chỉ chạy khi mở link) */
+    .ribbon-wrap { position:relative; width:100%; max-width:52rem; margin:0 auto; filter:drop-shadow(0 10px 14px rgba(13,148,136,.16)); }
+    .ribbon-wrap.pre .ribbon, .ribbon-wrap.pre .roller { visibility:hidden; }
+    .ribbon { position:relative; margin:0 7px; padding:.7rem 2rem; background:linear-gradient(180deg,#ffffff,#f0fdfa); border-top:1px solid #99f6e4; border-bottom:1px solid #99f6e4; }
+    .roller { position:absolute; top:-9px; bottom:-9px; width:14px; border-radius:8px; z-index:2; background:linear-gradient(90deg,#0f766e,#5eead4 45%,#0f766e); box-shadow:0 2px 6px rgba(15,118,110,.35); }
+    .roller.rl { left:0; } .roller.rr { right:0; }
+    /* Đã tăng tốc nhẹ: 1.9s → 1.45s, độ trễ .4s → .25s */
+    .ribbon-wrap.opening .ribbon { animation:ribbonOpen 1.45s cubic-bezier(.45,.1,.35,1) .25s both; }
+    .ribbon-wrap.opening .rl { animation:rollL 1.45s cubic-bezier(.45,.1,.35,1) .25s both; }
+    .ribbon-wrap.opening .rr { animation:rollR 1.45s cubic-bezier(.45,.1,.35,1) .25s both; }
+    .ribbon-wrap.opening .msg-box { animation:ribbonText .7s ease 1.45s both; }
+    @keyframes ribbonOpen { from { clip-path:inset(0 50% 0 50%); } to { clip-path:inset(0 0 0 0); } }
+    @keyframes rollL { 0% { left:50%; transform:translateX(-50%); opacity:0; } 10% { opacity:1; } 100% { left:0; transform:none; opacity:1; } }
+    @keyframes rollR { 0% { right:50%; transform:translateX(50%); opacity:0; } 10% { opacity:1; } 100% { right:0; transform:none; opacity:1; } }
+    @keyframes ribbonText { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:none; } }
+    @media (prefers-reduced-motion:reduce) { .ribbon-wrap.opening .ribbon, .ribbon-wrap.opening .roller, .ribbon-wrap.opening .msg-box { animation:none !important; } }
+    .lift-btn { transition:transform .2s ease,box-shadow .2s ease; }
+    .lift-btn:hover { transform:translateY(-3px); box-shadow:0 14px 24px -10px rgba(13,148,136,.5); }
+    .lift-btn:active { transform:scale(.97); }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between relative overflow-x-hidden">
 
-<div class="container">
-  <header>
-    <h1>📚 Review HSK1_Ms QA</h1>
-    <div class="subtitle">Ôn Tập Từ Vựng & Câu Từ</div>
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-teal-200/40 rounded-full blur-3xl animate-float"></div>
+    <div class="absolute top-1/3 -right-24 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl animate-float" style="animation-delay:-2s;"></div>
+    <div class="absolute -bottom-24 left-1/3 w-96 h-96 bg-amber-100/50 rounded-full blur-3xl animate-float" style="animation-delay:-4s;"></div>
+  </div>
+
+  <header class="relative z-10 w-full max-w-6xl mx-auto px-4 py-3 flex items-center justify-between border-b border-teal-100/60">
+    <div onclick="goHome()" class="flex items-center space-x-3 cursor-pointer group">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">華</div>
+      <div>
+        <h1 class="text-lg font-bold bg-gradient-to-r from-teal-800 via-emerald-700 to-slate-800 bg-clip-text text-transparent">Level 1 _ Ms QA.Hantalk</h1>
+        <p class="text-xs text-teal-600/80">Góc nhỏ ôn luyện tiếng Trung của bạn</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+    <button id="btnSound" onclick="toggleSound()" title="声音 · Âm thanh" class="w-9 h-9 rounded-full bg-white border border-slate-200 text-teal-600 hover:bg-teal-50 shadow-sm flex items-center justify-center transition-colors"><i id="soundIcon" class="fa-solid fa-volume-high text-sm"></i></button>
+    </div>
   </header>
 
-  <div id="loading">⏳ Đang tải dữ liệu từ file <b>HSK1_flashcards_theo_bai.xlsx</b>...</div>
+  <main class="relative z-10 max-w-6xl w-full mx-auto px-4 py-3 md:py-4 flex-grow flex flex-col justify-center">
 
-  <div id="app" class="hidden">
-    <div class="section-tabs">
-      <button class="tab-btn active" id="tab1" onclick="switchSection(1)">1. Ôn Từ Vựng</button>
-      <button class="tab-btn" id="tab2" onclick="switchSection(2)">2. Sắp Xếp Câu</button>
-      <button class="tab-btn" id="tab3" onclick="switchSection(3)">3. Luyện Gõ</button>
-    </div>
-
-    <div class="filter-card">
-      <div style="font-weight: bold; margin-bottom: 5px;">🎯 Chọn bài học:</div>
-      <div class="filter-row">
-        <select id="modeSelect" onchange="handleModeChange()">
-          <option value="single">Theo 1 bài cụ thể</option>
-          <option value="range">Tùy chọn dải bài (Ví dụ: 1 đến 2)</option>
-          <option value="all">Tất cả bài (Bài 1 - 30)</option>
-        </select>
-
-        <span id="singleSelectBox">
-          <select id="singleLessonSelect" onchange="startRound()"></select>
-        </span>
-
-        <span id="rangeSelectBox" class="hidden">
-          Từ Bài <input type="number" id="startLesson" value="1" min="1" max="30">
-          đến Bài <input type="number" id="endLesson" value="2" min="1" max="30">
-          <button style="padding: 7px 12px; border-radius: 8px; background: var(--secondary); color: white; border: none; font-weight: bold; cursor: pointer;" onclick="startRound()">Áp dụng</button>
-        </span>
+    <!-- SLIDE 1: CHÀO MỪNG -->
+    <section id="slide1" class="my-auto py-0 animate-pop-in">
+      <div class="glass-card rounded-3xl p-4 md:p-6 relative overflow-hidden text-center border border-white">
+        <div class="relative z-10 space-y-3 md:space-y-4">
+          <div class="w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-gradient-to-tr from-teal-400 to-emerald-400 p-1 shadow-lg shadow-teal-500/20 mx-auto">
+            <div class="w-full h-full bg-white rounded-[22px] flex flex-col items-center justify-center text-slate-700">
+              <span class="text-4xl md:text-5xl leading-none">☕</span><span class="text-base md:text-lg font-extrabold mt-1 text-teal-700">Level 1</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-center gap-3 md:gap-5">
+            <span class="h-px w-10 md:w-28 bg-gradient-to-r from-transparent to-teal-300"></span>
+            <div>
+              <p class="text-xl md:text-2xl font-extrabold tracking-wide whitespace-nowrap"><span>✨</span> <span class="bg-gradient-to-r from-teal-600 to-emerald-500 bg-clip-text text-transparent">每天进步一点点</span> <span>✨</span></p>
+              <p class="text-sm md:text-base font-medium text-teal-700/80 mt-0.5">Mỗi ngày tiến bộ một chút</p>
+            </div>
+            <span class="h-px w-10 md:w-28 bg-gradient-to-l from-transparent to-teal-300"></span>
+          </div>
+          <div id="ribbonWrap" class="ribbon-wrap pre"><span class="roller rl"></span><span class="roller rr"></span><div class="ribbon"><div class="msg-box" style="min-height:5.5rem"><p id="wCn" class="msg-cn"></p><p id="wVi" class="msg-vi"></p></div></div></div>
+          <button onclick="SFX.tap();goStudy()" class="w-full sm:w-auto px-10 py-3 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-lg shadow-xl shadow-teal-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all mx-auto">
+            ▶️ 开始复习 · Bắt đầu ôn tập
+          </button>
+          <div id="homeResumeCard" class="hidden text-left">
+            <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-teal-300/50 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-teal-600/30">🌱</div>
+                <div>
+                  <h3 class="font-bold text-slate-800 text-base">继续复习 · Tiếp tục ôn tập</h3>
+                  <p id="resumeCardText" class="text-xs text-slate-600 mt-0.5"></p>
+                </div>
+              </div>
+              <button onclick="resumeSaved()" class="lift-btn w-full sm:w-auto px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-md shadow-teal-600/20">▶️ 继续 · Tiếp tục</button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="status-bar">
-      <div>Đang luyện: <span id="currentModeLabel" style="color: var(--primary);">Bài 1</span></div>
-      <div class="hearts">❤ <span id="heartCount">5</span></div>
-    </div>
-
-    <div class="progress-container">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-
-    <div id="quizArea">
-      <div class="question-card">
-        <span class="type-tag" id="typeTag">Loại bài tập</span>
-        <div class="question-text" id="questionTitle">Nội dung</div>
-        <div class="sub-text" id="questionSub">Hướng dẫn</div>
+    <!-- SLIDE 2: HỌC TẬP (chọn chế độ + chọn bài + nội dung trên cùng một trang) -->
+    <section id="slide2" class="hidden space-y-6 animate-pop-in">
+      <div class="space-y-3">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span class="w-7 h-7 rounded-full bg-teal-600 text-white text-sm flex items-center justify-center shadow">1</span> 选择练习方式 · Chọn cách luyện tập</h3>
+        <div id="modes" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
       </div>
 
-      <div id="interactiveArea"></div>
-      <div id="feedback" class="feedback-box hidden"></div>
-      <button class="btn-main" id="actionBtn" onclick="handleAction()">Kiểm tra</button>
+      <div class="glass-card rounded-2xl p-5 space-y-4">
+        <h3 class="text-lg font-bold text-slate-800 border-b border-slate-200/80 pb-2 flex items-center gap-2"><span class="w-7 h-7 rounded-full bg-teal-600 text-white text-sm flex items-center justify-center shadow">2</span> 选择课程范围 · Chọn phạm vi bài học</h3>
+        <div id="scopes" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+        <div id="chipWrap" class="hidden space-y-3">
+          <div id="chips" class="grid grid-cols-5 sm:grid-cols-10 gap-2.5"></div>
+          <div id="multiCtl" class="hidden flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-slate-600 font-medium">范围 · Khoảng:</span>
+            <select id="rFrom" class="p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-700"></select>
+            <span class="text-teal-600 font-bold">➔</span>
+            <select id="rTo" class="p-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-700"></select>
+            <button onclick="pickRange()" class="px-3 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">选择 · Chọn khoảng</button>
+            <button onclick="startSession()" class="lift-btn ml-auto px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md shadow-teal-600/20">▶️ 开始 · Bắt đầu</button>
+          </div>
+          <p id="scopeInfo" class="text-xs text-teal-700 font-medium"></p>
+        </div>
+      </div>
+
+      <!-- NỘI DUNG HỌC hiện ngay bên dưới -->
+      <div id="studyArea" class="space-y-6 scroll-mt-4">
+        <div id="panel" class="hidden glass-card rounded-3xl p-6 md:p-8 text-center border border-white"></div>
+
+        <div id="exWrap" class="hidden space-y-6">
+          <div class="glass-card rounded-2xl p-4 space-y-2">
+            <div class="flex justify-between items-center text-xs text-slate-600 font-medium">
+              <span id="exModeTitle"></span><span id="exProgressCounter"></span>
+            </div>
+            <div class="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden">
+              <div id="exProgressBar" class="bg-gradient-to-r from-teal-500 to-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width:0%"></div>
+            </div>
+          </div>
+          <div id="exerciseCard" class="glass-card rounded-3xl p-6 md:p-8 space-y-6 relative border border-white">
+            <div class="text-center space-y-3">
+              <span id="qBadge" class="inline-block px-3 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-full border border-teal-200"></span>
+              <h2 id="qChinese" class="font-extrabold text-slate-800 tracking-wide"></h2>
+              <div id="pyRow" class="flex items-center justify-center space-x-2">
+                <span id="qPinyin" class="text-xl text-teal-600 font-medium"></span>
+                <button id="btnSpeak" onclick="speakCurrentText()" class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 hover:bg-teal-200 flex items-center justify-center transition-colors"><i class="fa-solid fa-volume-high text-xs"></i></button>
+              </div>
+              <p id="qVietnamese" class="text-sm text-slate-500 italic"></p>
+            </div>
+            <hr class="border-slate-100">
+            <div id="interactiveArea" class="min-h-[160px] w-full max-w-3xl mx-auto flex flex-col justify-center"></div>
+            <div id="feedbackBox" class="hidden w-full max-w-3xl mx-auto rounded-2xl p-4 text-center text-base font-medium animate-pop-in">
+              <p id="feedbackChinese" class="font-extrabold text-xl md:text-2xl"></p>
+              <p id="feedbackVietnamese" class="text-lg md:text-xl font-semibold mt-2" style="white-space:pre-line"></p>
+              <p id="feedbackAlt" class="hidden text-sm font-medium mt-3 pt-2 border-t border-current/20 opacity-90" style="white-space:pre-line"></p>
+            </div>
+            <div class="pt-2 w-full max-w-3xl mx-auto">
+              <button id="btnCheckAnswer" onclick="checkAnswer()" class="lift-btn w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-base shadow-md shadow-teal-600/20"></button>
+              <button id="btnSkip" onclick="skipQuestion()" class="hidden lift-sm w-full mt-3 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-teal-300 text-slate-600 font-semibold text-sm transition-all items-center justify-center gap-2"><i class="fa-solid fa-forward text-teal-600"></i> 跳过 · Bỏ qua</button>
+              <button onclick="pauseSession()" class="lift-sm w-full mt-3 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-teal-300 text-slate-700 font-semibold text-sm transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-pause text-teal-600"></i> 暂停 · Tạm dừng</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: HỘP QUÀ -->
+    <section id="slide3" class="hidden space-y-8 animate-pop-in py-6">
+      <div class="text-center space-y-2 max-w-xl mx-auto">
+        <div class="inline-block px-6 py-2.5 rounded-full bg-amber-100 text-amber-800 text-lg md:text-2xl font-extrabold border border-amber-200/80">🎉 棒棒哒！· Hoàn thành rất tốt!</div>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800">🎁 今天，选一句话送给自己吧。</h2>
+        <p class="text-sm text-slate-600">Hôm nay, chọn một câu dành cho chính mình nhé.</p>
+      </div>
+      <div id="giftGrid" class="flex justify-center gap-4 md:gap-12 pt-4"></div>
+      <div id="quoteArea" class="quote-area glass-card rounded-3xl p-6 max-w-2xl mx-auto text-center border-2 border-amber-300 bg-amber-50/40 flex flex-col items-center justify-center gap-4">
+        <div class="msg-box" style="min-height:7.5rem"><p id="quoteCn" class="msg-cn"></p><p id="quoteVi" class="msg-vi"></p></div>
+        <button onclick="goHome()" class="lift-btn px-8 py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-lg shadow-teal-600/20">🏠 回到首页 · Về trang chủ</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="modalNotice" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-modal max-w-sm w-full rounded-3xl p-6 text-center space-y-4 animate-pop-in border border-white">
+      <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center text-xl mx-auto">🌱</div>
+      <div>
+        <h3 id="noticeTitle" class="font-bold text-slate-800 text-lg"></h3>
+        <p id="noticeDesc" class="text-xs text-slate-600 mt-1 leading-relaxed"></p>
+      </div>
+      <button onclick="$('modalNotice').classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-teal-600 text-white font-bold text-xs">知道了 · Hiểu rồi</button>
     </div>
   </div>
-</div>
 
-<script>
-  let rawData = [];
-  let currentQueue = [];
-  let mistakeQueue = [];
-  let recordHistory = [];
-  let currentItem = null;
-  let activeSection = 1;
-  let hearts = 5;
-  let totalInRound = 0;
-  let completedInRound = 0;
-  let isAnswered = false;
+  <footer class="relative z-10 text-center py-4 text-xs text-slate-400 border-t border-teal-100/40">
+    <p>Ms QA.Hantalk @ Level 1 Interactive Practice</p>
+  </footer>
 
-  function cleanPunctuation(str) {
-    if (!str) return '';
-    return str.replace(/[。？！，、；：""''（）《》,.?!;:—–\-~…\.]/g, '').trim();
-  }
-
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playSound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    if (type === 'correct') {
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.35);
-    } else {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-      osc.frequency.setValueAtTime(160, audioCtx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.4);
-    }
-  }
-
-  window.onload = function() {
-    fetch('HSK1_flashcards_theo_bai.xlsx')
-      .then(res => {
-        if (!res.ok) throw new Error("Lỗi tải file");
-        return res.arrayBuffer();
-      })
-      .then(buffer => {
-        const wb = XLSX.read(buffer, { type: 'array' });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet);
-        
-        rawData = json.map(r => ({
-          lessonNum: parseInt(String(r['Bài'] || '').replace(/\D/g, '')) || 1,
-          lessonStr: String(r['Bài'] || '').trim(),
-          vocab: String(r['Từ'] || '').trim(),
-          pinyin: String(r['Pinyin'] || '').trim(),
-          meaning: String(r['Nghĩa tiếng Việt'] || '').trim(),
-          example_vi: r['Ví dụ tiếng Việt'] ? String(r['Ví dụ tiếng Việt']).trim() : '',
-          example_cn: r['Ví dụ tiếng Trung'] ? String(r['Ví dụ tiếng Trung']).trim() : '',
-          example_pinyin: r['Ví dụ pinyin'] ? String(r['Ví dụ pinyin']).trim() : ''
-        })).filter(item => item.vocab && item.meaning);
-
-        populateSingleLessons();
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        startRound();
-      })
-      .catch(err => {
-        document.getElementById('loading').innerHTML = `
-          <div style="color:red; text-align:left;">
-            ⚠ <b>Chưa tìm thấy file HSK1_flashcards_theo_bai.xlsx!</b><br>
-            Hãy chắc chắn bạn đã upload file Excel lên thư mục của dự án.
-          </div>`;
-      });
-  };
-
-  function populateSingleLessons() {
-    const select = document.getElementById('singleLessonSelect');
-    select.innerHTML = '';
-    const lessons = [...new Set(rawData.map(i => i.lessonNum))].sort((a,b)=>a-b);
-    lessons.forEach(num => {
-      select.innerHTML += `<option value="${num}">Bài ${num}</option>`;
-    });
-  }
-
-  function switchSection(sec) {
-    activeSection = sec;
-    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-      if (idx + 1 === sec) btn.classList.add('active');
-      else btn.classList.remove('active');
-    });
-    resetQuizAreaUI();
-    startRound();
-  }
-
-  function handleModeChange() {
-    const mode = document.getElementById('modeSelect').value;
-    document.getElementById('singleSelectBox').className = mode === 'single' ? '' : 'hidden';
-    document.getElementById('rangeSelectBox').className = mode === 'range' ? '' : 'hidden';
-    resetQuizAreaUI();
-    startRound();
-  }
-
-  function resetQuizAreaUI() {
-    document.getElementById('quizArea').innerHTML = `
-      <div class="question-card">
-        <span class="type-tag" id="typeTag">Loại bài tập</span>
-        <div class="question-text" id="questionTitle">Nội dung</div>
-        <div class="sub-text" id="questionSub">Hướng dẫn</div>
-      </div>
-      <div id="interactiveArea"></div>
-      <div id="feedback" class="feedback-box hidden"></div>
-      <button class="btn-main" id="actionBtn" onclick="handleAction()">Kiểm tra</button>
-    `;
-  }
-
-  function startRound() {
-    const mode = document.getElementById('modeSelect').value;
-    let filtered = [];
-    let label = '';
-
-    if (mode === 'single') {
-      const selectedNum = parseInt(document.getElementById('singleLessonSelect').value);
-      filtered = rawData.filter(i => i.lessonNum === selectedNum);
-      label = `Bài ${selectedNum}`;
-    } else if (mode === 'range') {
-      const start = parseInt(document.getElementById('startLesson').value) || 1;
-      const end = parseInt(document.getElementById('endLesson').value) || 1;
-      filtered = rawData.filter(i => i.lessonNum >= start && i.lessonNum <= end);
-      label = `Bài ${start} ➔ Bài ${end}`;
-    } else {
-      filtered = [...rawData];
-      label = `Tất cả 30 Bài`;
-    }
-
-    document.getElementById('currentModeLabel').innerText = label;
-
-    if (filtered.length === 0) {
-      alert("⚠ Không tìm thấy dữ liệu bài tập thích hợp cho phần này!");
-      return;
-    }
-
-    if (activeSection === 2) {
-      filtered = filtered.filter(i => i.example_pinyin && i.example_vi);
-      currentQueue = filtered.map(item => ({ ...item, taskType: 'sentence' })).sort(() => Math.random() - 0.5);
-    } else if (activeSection === 3) {
-      let typingList = [];
-      filtered.forEach(item => {
-        // Câu hỏi gõ TỪ VỰNG
-        typingList.push({
-          taskType: 'vocab',
-          questionVi: item.meaning,
-          targetCn: item.vocab,
-          pinyinHint: item.pinyin,
-          rawItem: item
-        });
-
-        // Câu hỏi gõ CÂU VÍ DỤ
-        if (item.example_cn && item.example_vi) {
-          typingList.push({
-            taskType: 'sentence',
-            questionVi: item.example_vi,
-            targetCn: item.example_cn,
-            pinyinHint: item.example_pinyin,
-            rawItem: item
-          });
-        }
-      });
-
-      // Xáo trộn ngẫu nhiên toàn bộ
-      currentQueue = typingList.sort(() => Math.random() - 0.5);
-    } else {
-      currentQueue = filtered.map(item => ({ ...item, taskType: 'vocab' })).sort(() => Math.random() - 0.5);
-    }
-
-    mistakeQueue = [];
-    recordHistory = [];
-    totalInRound = currentQueue.length;
-    completedInRound = 0;
-    hearts = 5;
-    document.getElementById('heartCount').innerText = hearts;
-    updateProgress();
-    nextQuestion();
-  }
-
-  function updateProgress() {
-    const pct = totalInRound > 0 ? (completedInRound / totalInRound) * 100 : 0;
-    document.getElementById('progressBar').style.width = `${Math.min(pct, 100)}%`;
-  }
-
-  function nextQuestion() {
-    isAnswered = false;
-    selectedOption = null;
-    const feedback = document.getElementById('feedback');
-    if (feedback) feedback.className = 'feedback-box hidden';
-    
-    const actionBtn = document.getElementById('actionBtn');
-    if (actionBtn) actionBtn.innerText = 'Kiểm tra';
-
-    if (currentQueue.length === 0) {
-      showSummaryReport();
-      return;
-    }
-
-    currentItem = currentQueue.shift();
-    renderQuiz();
-  }
-
-  function renderQuiz() {
-    const area = document.getElementById('interactiveArea');
-    if (!area) return;
-    area.innerHTML = '';
-
-    if (activeSection === 1) {
-      const isCnToVi = Math.random() > 0.5;
-      document.getElementById('typeTag').innerText = "PHẦN 1: ÔN TẬP TỪ VỰNG";
-
-      if (isCnToVi) {
-        document.getElementById('questionTitle').innerText = `${currentItem.vocab} (${currentItem.pinyin})`;
-        document.getElementById('questionSub').innerText = "Chọn nghĩa tiếng Việt tương ứng:";
-      } else {
-        document.getElementById('questionTitle').innerText = currentItem.meaning;
-        document.getElementById('questionSub').innerText = "Chọn từ tiếng Trung tương ứng:";
-      }
-
-      let distractors = rawData.filter(i => i.vocab !== currentItem.vocab).sort(() => Math.random() - 0.5).slice(0, 2);
-      let options = [currentItem, ...distractors].sort(() => Math.random() - 0.5);
-
-      let grid = document.createElement('div');
-      grid.className = 'options-grid';
-
-      options.forEach(opt => {
-        let btn = document.createElement('button');
-        btn.className = 'btn-option';
-        btn.innerText = isCnToVi ? opt.meaning : `${opt.vocab} (${opt.pinyin})`;
-        btn.onclick = () => selectOption(btn, opt.vocab === currentItem.vocab);
-        grid.appendChild(btn);
-      });
-      area.appendChild(grid);
-
-    } else if (activeSection === 2) {
-      document.getElementById('typeTag').innerText = "PHẦN 2: SẮP XẾP CÂU (PINYIN)";
-      document.getElementById('questionTitle').innerText = currentItem.example_vi;
-      document.getElementById('questionSub').innerText = "Bấm chọn các từ Pinyin để ghép thành câu hoàn chỉnh:";
-
-      let rawPinyin = currentItem.example_pinyin.trim();
-      let cleanPyStr = cleanPunctuation(rawPinyin);
-      let pyWords = cleanPyStr.split(/\s+/).filter(w => w.length > 0);
-
-      let shuffledPyWords = [...pyWords].sort(() => Math.random() - 0.5);
-
-      area.innerHTML = `
-        <div class="sentence-target" id="targetArea"></div>
-        <div class="word-pool" id="poolArea"></div>
-      `;
-
-      const poolArea = document.getElementById('poolArea');
-      const targetArea = document.getElementById('targetArea');
-
-      shuffledPyWords.forEach((word) => {
-        let chip = document.createElement('div');
-        chip.className = 'word-chip';
-        chip.innerText = word;
-        chip.onclick = () => {
-          if (chip.parentElement.id === 'poolArea') targetArea.appendChild(chip);
-          else poolArea.appendChild(chip);
-        };
-        poolArea.appendChild(chip);
-      });
-
-    } else if (activeSection === 3) {
-      // KHÔNG HIỂN THỊ PINYIN TRONG CÂU HỎI
-      if (currentItem.taskType === 'vocab') {
-        document.getElementById('typeTag').innerText = "📝 LUYỆN GÕ: TỪ VỰNG";
-        document.getElementById('questionTitle').innerText = currentItem.questionVi;
-        document.getElementById('questionSub').innerText = "Hãy gõ từ tiếng Trung tương ứng:";
-      } else {
-        document.getElementById('typeTag').innerText = "💬 LUYỆN GÕ: CÂU VÍ DỤ";
-        document.getElementById('questionTitle').innerText = currentItem.questionVi;
-        document.getElementById('questionSub').innerText = "Hãy gõ câu tiếng Trung hoàn chỉnh:";
-      }
-
-      area.innerHTML = `
-        <input type="text" id="typeInput" placeholder="Gõ chữ Hán vào đây..." autocomplete="off">
-      `;
-      setTimeout(() => {
-        const inp = document.getElementById('typeInput');
-        if (inp) inp.focus();
-      }, 100);
-    }
-  }
-
-  let selectedOption = null;
-  let isOptionCorrect = false;
-
-  function selectOption(btn, isCorrect) {
-    document.querySelectorAll('.btn-option').forEach(b => b.style.borderColor = 'var(--card-border)');
-    btn.style.borderColor = 'var(--secondary)';
-    selectedOption = btn;
-    isOptionCorrect = isCorrect;
-  }
-
-  function handleAction() {
-    if (isAnswered) {
-      completedInRound++;
-      updateProgress();
-      nextQuestion();
-      return;
-    }
-
-    let isCorrect = false;
-    let correctAnswerText = '';
-
-    if (activeSection === 1) {
-      if (!selectedOption) { alert("Vui lòng chọn 1 đáp án!"); return; }
-      isCorrect = isOptionCorrect;
-      correctAnswerText = `${currentItem.vocab} (${currentItem.pinyin}) : ${currentItem.meaning}`;
-    } else if (activeSection === 2) {
-      const userWords = Array.from(document.getElementById('targetArea').children)
-        .map(el => el.innerText.trim());
-      const userPinyinStr = userWords.join(' ').toLowerCase();
-      const targetPinyinClean = cleanPunctuation(currentItem.example_pinyin).split(/\s+/).join(' ').toLowerCase();
-
-      isCorrect = (userPinyinStr === targetPinyinClean);
-      correctAnswerText = currentItem.example_pinyin;
-    } else if (activeSection === 3) {
-      const val = document.getElementById('typeInput').value;
-      const cleanTarget = cleanPunctuation(currentItem.targetCn);
-      isCorrect = (cleanPunctuation(val) === cleanTarget);
-      correctAnswerText = `${currentItem.targetCn} (${currentItem.pinyinHint})`;
-    }
-
-    recordHistory.push({
-      item: currentItem,
-      isCorrect: isCorrect,
-      correctText: correctAnswerText
-    });
-
-    const feedback = document.getElementById('feedback');
-    feedback.classList.remove('hidden');
-
-    if (isCorrect) {
-      playSound('correct');
-      feedback.className = 'feedback-box correct';
-      feedback.innerHTML = '🎉 Chính xác! Bạn làm xuất sắc lắm!';
-    } else {
-      playSound('wrong');
-      hearts--;
-      document.getElementById('heartCount').innerText = Math.max(0, hearts);
-      feedback.className = 'feedback-box wrong';
-      feedback.innerHTML = `❌ Chưa chính xác!<br><small>Đáp án đúng: <b>${correctAnswerText}</b></small>`;
-      mistakeQueue.push(currentItem);
-    }
-
-    isAnswered = true;
-    document.getElementById('actionBtn').innerText = 'Câu tiếp theo ➡️';
-  }
-
-  function showSummaryReport() {
-    const totalQuestions = recordHistory.length;
-    const correctCount = recordHistory.filter(r => r.isCorrect).length;
-    const wrongList = recordHistory.filter(r => !r.isCorrect);
-    const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
-
-    let wrongDetailsHtml = '';
-    if (wrongList.length > 0) {
-      wrongDetailsHtml = `<div style="margin-top:15px; font-weight:bold; color: var(--danger);">Các câu/từ cần ôn lại:</div>`;
-      wrongList.forEach(w => {
-        const titleShow = w.item.questionVi || w.item.vocab || w.item.example_vi;
-        wrongDetailsHtml += `
-          <div class="wrong-item">
-            📌 <b>${titleShow}</b><br>
-            Đáp án đúng: <i>${w.correctText}</i>
-          </div>
-        `;
-      });
-    } else {
-      wrongDetailsHtml = `<div style="margin-top:15px; color: var(--primary); font-weight:bold;">🌟 Tuyệt vời! Bạn không làm sai câu nào cả!</div>`;
-    }
-
-    const sectionName = activeSection === 1 ? 'Ôn Từ Vựng' : (activeSection === 2 ? 'Sắp Xếp Câu (Pinyin)' : 'Luyện Gõ Từ & Câu');
-
-    document.getElementById('quizArea').innerHTML = `
-      <div style="text-align:center;">
-        <div style="font-size:50px; margin-bottom: 10px;">🏆</div>
-        <h2 style="margin:0 0 10px 0; color: var(--primary);">KẾT QUẢ CỦA BẠN</h2>
-        <div style="color:#666; font-size:14px;">Phần: <b>${sectionName}</b></div>
-
-        <div class="report-card">
-          <div class="report-stat"><span>Tổng số câu hỏi:</span> <span>${totalQuestions}</span></div>
-          <div class="report-stat"><span>Số câu làm đúng:</span> <span style="color: var(--primary);">${correctCount}</span></div>
-          <div class="report-stat"><span>Số câu làm sai:</span> <span style="color: var(--danger);">${wrongList.length}</span></div>
-          <div class="report-stat" style="border-bottom:none; font-size: 18px; margin-top: 5px;">
-            <span>Tỷ lệ chính xác:</span> 
-            <span style="color: ${accuracy >= 80 ? 'var(--primary)' : 'orange'};">${accuracy}%</span>
-          </div>
-          ${wrongDetailsHtml}
-        </div>
-
-        ${mistakeQueue.length > 0 ? `
-          <button class="btn-main btn-secondary" onclick="retryMistakes()">🔁 Ôn lại ${mistakeQueue.length} câu chưa đúng</button>
-        ` : ''}
-        
-        <button class="btn-main" onclick="resetQuizAreaUI(); startRound();">▶️ Tiếp tục ôn luyện bài này</button>
-        <button class="btn-main" style="background: #666; border-color: #444;" onclick="location.reload()">🏁 Kết thúc / Chọn bài khác</button>
-      </div>
-    `;
-  }
-
-  function retryMistakes() {
-    currentQueue = [...mistakeQueue];
-    mistakeQueue = [];
-    recordHistory = [];
-    totalInRound = currentQueue.length;
-    completedInRound = 0;
-    resetQuizAreaUI();
-    updateProgress();
-    nextQuestion();
-  }
+  <script>
+// Dữ liệu được tạo từ file Tu_vung_Han_ngu_Bai_1-30_gop.xlsx
+// Trường "alts" (nếu có) = các cách xếp câu khác cũng đúng (thời gian ↔ chủ ngữ, có/không có 的)
+const LESSON_DATA = [{"lesson":1,"title":"Bài 1","vocab":[{"cn":"你好","py":"nǐ hǎo","vi":"xin chào"},{"cn":"你们","py":"nǐmen","vi":"các bạn","ex":{"cn":"你们好！","py":"Nǐmen hǎo!","vi":"Chào các bạn!"}},{"cn":"我们","py":"wǒmen","vi":"chúng tôi; chúng ta"},{"cn":"他","py":"tā","vi":"Anh ấy"},{"cn":"她","py":"tā","vi":"Cô ấy"},{"cn":"他们","py":"tāmen","vi":"họ; bọn họ"},{"cn":"再见","py":"zàijiàn","vi":"tạm biệt"},{"cn":"是","py":"shì","vi":"là","ex":{"cn":"我是…","py":"Wǒ shì…..","vi":"Tôi là …."}},{"cn":"老师","py":"lǎoshī","vi":"giáo viên","ex":{"cn":"他们是老师。","py":"Tā men shì lǎoshī.","vi":"Họ là giáo viên."}}],"sentences":[{"cn":"你们好！","py":"Nǐmen hǎo!","vi":"Chào các bạn!","words":["nǐmen","hǎo"]},{"cn":"我是…","py":"Wǒ shì…..","vi":"Tôi là ….","words":["wǒ","shì"]},{"cn":"他们是老师。","py":"Tā men shì lǎoshī.","vi":"Họ là giáo viên.","words":["tā","men","shì","lǎoshī"]}]},{"lesson":2,"title":"Bài 2","vocab":[{"cn":"吗","py":"ma","vi":"à; không (trợ từ nghi vấn)","ex":{"cn":"你是老师吗？","py":"Nǐ shì lǎoshī ma?","vi":"Bạn là giáo viên à?"}},{"cn":"经理","py":"jīnglǐ","vi":"giám đốc; quản lý","ex":{"cn":"他是经理。","py":"Tā shì jīnglǐ.","vi":"Anh ấy là giám đốc."}},{"cn":"学生","py":"xuéshēng","vi":"học sinh; sinh viên","ex":{"cn":"你是学生吗？","py":"Nǐ shì xuéshēng ma?","vi":"Bạn là học sinh phải không?"}},{"cn":"谢谢","py":"xièxie","vi":"cảm ơn","ex":{"cn":"谢谢老师！","py":"Xièxie lǎoshī!","vi":"Cảm ơn cô giáo!"}},{"cn":"不客气","py":"bú kèqi","vi":"đừng khách sáo; không có gì","ex":{"cn":"谢谢你！——不客气！","py":"Xièxie nǐ! — Bú kèqi!","vi":"Cảm ơn bạn! – Đừng khách sáo!"}},{"cn":"对不起","py":"duìbuqǐ","vi":"xin lỗi"},{"cn":"没关系","py":"méi guānxi","vi":"không sao; không có gì","ex":{"cn":"对不起！——没关系！","py":"Duìbuqǐ! — Méi guānxi!","vi":"Xin lỗi! – Không sao!"}},{"cn":"不","py":"bù","vi":"không","ex":{"cn":"我不是老师。","py":"Wǒ bú shì lǎoshī.","vi":"Tôi không phải là giáo viên."}}],"sentences":[{"cn":"你是老师吗？","py":"Nǐ shì lǎoshī ma?","vi":"Bạn là giáo viên à?","words":["nǐ","shì","lǎoshī","ma"]},{"cn":"他是经理。","py":"Tā shì jīnglǐ.","vi":"Anh ấy là giám đốc.","words":["tā","shì","jīnglǐ"]},{"cn":"你是学生吗？","py":"Nǐ shì xuéshēng ma?","vi":"Bạn là học sinh phải không?","words":["nǐ","shì","xuéshēng","ma"]},{"cn":"谢谢老师！","py":"Xièxie lǎoshī!","vi":"Cảm ơn cô giáo!","words":["xièxie","lǎoshī"]},{"cn":"谢谢你！——不客气！","py":"Xièxie nǐ! — Bú kèqi!","vi":"Cảm ơn bạn! – Đừng khách sáo!","words":["xièxie","nǐ","bú","kèqi"]},{"cn":"对不起！——没关系！","py":"Duìbuqǐ! — Méi guānxi!","vi":"Xin lỗi! – Không sao!","words":["duìbuqǐ","méi","guānxi"]},{"cn":"我不是老师。","py":"Wǒ bú shì lǎoshī.","vi":"Tôi không phải là giáo viên.","words":["wǒ","bú","shì","lǎoshī"]}]},{"lesson":3,"title":"Bài 3","vocab":[{"cn":"下午","py":"xiàwǔ","vi":"buổi chiều","ex":{"cn":"下午好！","py":"Xiàwǔ hǎo!","vi":"Chào buổi chiều!"}},{"cn":"晚上","py":"wǎnshang","vi":"buổi tối","ex":{"cn":"晚上好！","py":"Wǎnshang hǎo!","vi":"Chào buổi tối!"}},{"cn":"叫","py":"jiào","vi":"gọi; tên là","ex":{"cn":"我叫…..","py":"Wǒ jiào…..","vi":"Tôi tên là …."}},{"cn":"什么","py":"shénme","vi":"gì; cái gì","ex":{"cn":"你叫什么?","py":"Nǐ jiào shénme？","vi":"Bạn tên là gì?"}},{"cn":"名字","py":"míngzi","vi":"tên","ex":{"cn":"你叫什么名字？","py":"Nǐ jiào shénme míngzi?","vi":"Bạn tên là gì?"}},{"cn":"贵姓","py":"guìxìng","vi":"quý danh (hỏi họ một cách lịch sự)","ex":{"cn":"您贵姓？","py":"Nín guìxìng?","vi":"Quý danh của bạn là gì?"}},{"cn":"姓","py":"xìng","vi":"họ; mang họ","ex":{"cn":"我姓李。","py":"Wǒ xìng Lǐ.","vi":"Tôi họ Lý."}},{"cn":"人","py":"rén","vi":"người"},{"cn":"中国","py":"Zhōngguó","vi":"Trung Quốc","ex":{"cn":"我是中国人。","py":"Wǒ shì Zhōngguó rén.","vi":"Tôi là người Trung Quốc."}},{"cn":"越南","py":"Yuènán","vi":"Việt Nam","ex":{"cn":"我是越南人。","py":"Wǒ shì Yuènán rén.","vi":"Tôi là người Việt Nam."}},{"cn":"呢","py":"ne","vi":"còn... thì sao? (trợ từ hỏi lại)","ex":{"cn":"我是老师，你呢？","py":"Wǒ shì lǎoshī, nǐ ne?","vi":"Tôi là giáo viên, còn bạn?"}},{"cn":"汉语","py":"Hànyǔ","vi":"tiếng Hán; tiếng Trung"}],"sentences":[{"cn":"下午好！","py":"Xiàwǔ hǎo!","vi":"Chào buổi chiều!","words":["xiàwǔ","hǎo"]},{"cn":"晚上好！","py":"Wǎnshang hǎo!","vi":"Chào buổi tối!","words":["wǎnshang","hǎo"]},{"cn":"我叫…..","py":"Wǒ jiào…..","vi":"Tôi tên là ….","words":["wǒ","jiào"]},{"cn":"你叫什么?","py":"Nǐ jiào shénme？","vi":"Bạn tên là gì?","words":["nǐ","jiào","shénme"]},{"cn":"你叫什么名字？","py":"Nǐ jiào shénme míngzi?","vi":"Bạn tên là gì?","words":["nǐ","jiào","shénme","míngzi"]},{"cn":"您贵姓？","py":"Nín guìxìng?","vi":"Quý danh của bạn là gì?","words":["nín","guìxìng"]},{"cn":"我姓李。","py":"Wǒ xìng Lǐ.","vi":"Tôi họ Lý.","words":["wǒ","xìng","lǐ"]},{"cn":"我是中国人。","py":"Wǒ shì Zhōngguó rén.","vi":"Tôi là người Trung Quốc.","words":["wǒ","shì","zhōngguó","rén"]},{"cn":"我是越南人。","py":"Wǒ shì Yuènán rén.","vi":"Tôi là người Việt Nam.","words":["wǒ","shì","yuènán","rén"]},{"cn":"我是老师，你呢？","py":"Wǒ shì lǎoshī, nǐ ne?","vi":"Tôi là giáo viên, còn bạn?","words":["wǒ","shì","lǎoshī","nǐ","ne"]}]},{"lesson":4,"title":"Bài 4","vocab":[{"cn":"先生","py":"xiānsheng","vi":"ông; ngài; thầy","ex":{"cn":"李先生是老师。","py":"Lǐ xiānsheng shì lǎoshī.","vi":"Ông Lý là giáo viên."}},{"cn":"哪","py":"nǎ","vi":"nào","ex":{"cn":"哪位是王经理？","py":"Nǎ wèi shì Wáng jīnglǐ?","vi":"Vị nào là giám đốc Vương?"}},{"cn":"国","py":"guó","vi":"nước; quốc gia","ex":{"cn":"你是哪国人？","py":"Nǐ shì nǎ guó rén?","vi":"Bạn là người nước nào?"}},{"cn":"也","py":"yě","vi":"cũng","ex":{"cn":"她也是老师。","py":"Tā yě shì lǎoshī.","vi":"Cô ấy cũng là giáo viên."}},{"cn":"请问","py":"qǐngwèn","vi":"xin hỏi","ex":{"cn":"请问，您贵姓？","py":"Qǐngwèn, nín guìxìng?","vi":"Xin hỏi, ông họ gì ạ?"}},{"cn":"位","py":"wèi","vi":"vị (lượng từ lịch sự chỉ người)","ex":{"cn":"这位是李老师。","py":"Zhè wèi shì Lǐ lǎoshī.","vi":"Vị này là thầy Lý."}},{"cn":"来","py":"lái","vi":"đến; tới","ex":{"cn":"老师来了。","py":"Lǎoshī lái le.","vi":"Cô giáo đến rồi."}},{"cn":"坐","py":"zuò","vi":"ngồi"},{"cn":"请","py":"qǐng","vi":"mời; xin","ex":{"cn":"请坐。","py":"Qǐng zuò.","vi":"Mời ngồi."}}],"sentences":[{"cn":"李先生是老师。","py":"Lǐ xiānsheng shì lǎoshī.","vi":"Ông Lý là giáo viên.","words":["lǐ","xiānsheng","shì","lǎoshī"]},{"cn":"哪位是王经理？","py":"Nǎ wèi shì Wáng jīnglǐ?","vi":"Vị nào là giám đốc Vương?","words":["nǎ","wèi","shì","wáng","jīnglǐ"]},{"cn":"你是哪国人？","py":"Nǐ shì nǎ guó rén?","vi":"Bạn là người nước nào?","words":["nǐ","shì","nǎ","guó","rén"]},{"cn":"她也是老师。","py":"Tā yě shì lǎoshī.","vi":"Cô ấy cũng là giáo viên.","words":["tā","yě","shì","lǎoshī"]},{"cn":"请问，您贵姓？","py":"Qǐngwèn, nín guìxìng?","vi":"Xin hỏi, ông họ gì ạ?","words":["qǐngwèn","nín","guìxìng"]},{"cn":"这位是李老师。","py":"Zhè wèi shì Lǐ lǎoshī.","vi":"Vị này là thầy Lý.","words":["zhè","wèi","shì","lǐ","lǎoshī"]},{"cn":"老师来了。","py":"Lǎoshī lái le.","vi":"Cô giáo đến rồi.","words":["lǎoshī","lái","le"]},{"cn":"请坐。","py":"Qǐng zuò.","vi":"Mời ngồi.","words":["qǐng","zuò"]}]},{"lesson":5,"title":"Bài 5","vocab":[{"cn":"认识","py":"rènshi","vi":"quen; quen biết","ex":{"cn":"你认识他吗？","py":"Nǐ rènshi tā ma?","vi":"Bạn có quen anh ấy không?"}},{"cn":"很","py":"hěn","vi":"rất"},{"cn":"高兴","py":"gāoxìng","vi":"vui; vui mừng","ex":{"cn":"认识你很高兴。","py":"Rènshi nǐ hěn gāoxìng.","vi":"Rất vui được làm quen với bạn."}},{"cn":"朋友","py":"péngyou","vi":"bạn bè","ex":{"cn":"我们是朋友。","py":"Wǒmen shì péngyou","vi":"Chúng tôi là bạn bè."}},{"cn":"漂亮","py":"piàoliang","vi":"xinh đẹp","ex":{"cn":"她很漂亮。","py":"Tā hěn piàoliang.","vi":"Cô ấy rất xinh đẹp."}},{"cn":"可爱","py":"kě'ài","vi":"đáng yêu; dễ thương","ex":{"cn":"她很漂亮，也很可爱。","py":"Tā hěn piàoliang, yě hěn kě'ài.","vi":"Cô ấy rất xinh đẹp, cũng rất dễ thương."}},{"cn":"喜欢","py":"xǐhuan","vi":"thích","ex":{"cn":"我喜欢汉语。","py":"Wǒ xǐhuan Hànyǔ.","vi":"Tôi thích tiếng Trung."}},{"cn":"喝","py":"hē","vi":"uống","ex":{"cn":"你喝什么？","py":"Nǐ hē shénme?","vi":"Bạn uống gì?"}},{"cn":"水","py":"shuǐ","vi":"nước","ex":{"cn":"我喝水。","py":"Wǒ hē shuǐ.","vi":"Tôi uống nước."}},{"cn":"渴","py":"kě","vi":"khát","ex":{"cn":"我很渴。","py":"Wǒ hěn kě.","vi":"Tôi rất khát。"}},{"cn":"太……了","py":"tài…le","vi":"quá… rồi","ex":{"cn":"太好了！","py":"Tài hǎo le!","vi":"Tốt quá rồi!"}}],"sentences":[{"cn":"你认识他吗？","py":"Nǐ rènshi tā ma?","vi":"Bạn có quen anh ấy không?","words":["nǐ","rènshi","tā","ma"]},{"cn":"认识你很高兴。","py":"Rènshi nǐ hěn gāoxìng.","vi":"Rất vui được làm quen với bạn.","words":["rènshi","nǐ","hěn","gāoxìng"]},{"cn":"我们是朋友。","py":"Wǒmen shì péngyou","vi":"Chúng tôi là bạn bè.","words":["wǒmen","shì","péngyou"]},{"cn":"她很漂亮。","py":"Tā hěn piàoliang.","vi":"Cô ấy rất xinh đẹp.","words":["tā","hěn","piàoliang"]},{"cn":"她很漂亮，也很可爱。","py":"Tā hěn piàoliang, yě hěn kě'ài.","vi":"Cô ấy rất xinh đẹp, cũng rất dễ thương.","words":["tā","hěn","piàoliang","yě","hěn","kěài"]},{"cn":"我喜欢汉语。","py":"Wǒ xǐhuan Hànyǔ.","vi":"Tôi thích tiếng Trung.","words":["wǒ","xǐhuan","hànyǔ"]},{"cn":"你喝什么？","py":"Nǐ hē shénme?","vi":"Bạn uống gì?","words":["nǐ","hē","shénme"]},{"cn":"我喝水。","py":"Wǒ hē shuǐ.","vi":"Tôi uống nước.","words":["wǒ","hē","shuǐ"]},{"cn":"我很渴。","py":"Wǒ hěn kě.","vi":"Tôi rất khát。","words":["wǒ","hěn","kě"]},{"cn":"太好了！","py":"Tài hǎo le!","vi":"Tốt quá rồi!","words":["tài","hǎo","le"]}]},{"lesson":6,"title":"Bài 6","vocab":[{"cn":"的","py":"de","vi":"của (trợ từ sở hữu)","ex":{"cn":"他是我的朋友","py":"Tā shì wǒ de péngyou.","vi":"Anh ấy là bạn của tôi."}},{"cn":"部门","py":"bùmén","vi":"bộ phận; phòng ban"},{"cn":"电话","py":"diànhuà","vi":"điện thoại","ex":{"cn":"这是我的电话。","py":"Zhè shì wǒ de diànhuà.","vi":"Đây là điện thoại của tôi."}},{"cn":"号码","py":"hàomǎ","vi":"số (số hiệu)","ex":{"cn":"你的号码是多少？","py":"Nǐ de hàomǎ shì duōshao?","vi":"Số của bạn là bao nhiêu?"}},{"cn":"邮箱","py":"yóuxiāng","vi":"hòm thư; email","ex":{"cn":"这是我的邮箱。","py":"Zhè shì wǒ de yóuxiāng.","vi":"Đây là email của tôi."}},{"cn":"多少","py":"duōshao","vi":"bao nhiêu","ex":{"cn":"你的电话号码是多少？","py":"Nǐ de diànhuà hàomǎ shì duōshao?","vi":"Số điện thoại của bạn là bao nhiêu?"}}],"sentences":[{"cn":"他是我的朋友","py":"Tā shì wǒ de péngyou.","vi":"Anh ấy là bạn của tôi.","words":["tā","shì","wǒ","de","péngyou"],"alts":[{"cn":"他是我朋友","words":["tā","shì","wǒ","péngyou"]}]},{"cn":"这是我的电话。","py":"Zhè shì wǒ de diànhuà.","vi":"Đây là điện thoại của tôi.","words":["zhè","shì","wǒ","de","diànhuà"]},{"cn":"你的号码是多少？","py":"Nǐ de hàomǎ shì duōshao?","vi":"Số của bạn là bao nhiêu?","words":["nǐ","de","hàomǎ","shì","duōshao"]},{"cn":"这是我的邮箱。","py":"Zhè shì wǒ de yóuxiāng.","vi":"Đây là email của tôi.","words":["zhè","shì","wǒ","de","yóuxiāng"]},{"cn":"你的电话号码是多少？","py":"Nǐ de diànhuà hàomǎ shì duōshao?","vi":"Số điện thoại của bạn là bao nhiêu?","words":["nǐ","de","diànhuà","hàomǎ","shì","duōshao"]}]},{"lesson":7,"title":"Bài 7","vocab":[{"cn":"年","py":"nián","vi":"năm"},{"cn":"月","py":"yuè","vi":"tháng","ex":{"cn":"三月。","py":"sān yuè.","vi":"tháng ba"}},{"cn":"号/日","py":"hào / rì","vi":"ngày (mùng...; ngày...)"},{"cn":"今天","py":"jīntiān","vi":"hôm nay","ex":{"cn":"今天我很高兴。","py":"Jīntiān wǒ hěn gāoxìng.","vi":"Hôm nay tôi rất vui."}},{"cn":"昨天","py":"zuótiān","vi":"hôm qua","ex":{"cn":"昨天是星期六。","py":"Zuótiān shì xīngqīliù.","vi":"Hôm qua là thứ bảy."}},{"cn":"明天","py":"míngtiān","vi":"ngày mai","ex":{"cn":"明天是星期二。","py":"Míngtiān shì xīngqī'èr.","vi":"Ngày mai là thứ ba."}},{"cn":"星期","py":"xīngqī","vi":"thứ; tuần","ex":{"cn":"今天是星期一。","py":"Jīntiān shì xīngqīyī.","vi":"Hôm nay là thứ hai."}},{"cn":"出差","py":"chūchāi","vi":"đi công tác","ex":{"cn":"他去中国出差。","py":"Tā qù Zhōngguó chūchāi.","vi":"Anh ấy đi công tác ở Trung Quốc."}},{"cn":"总经理","py":"zǒngjīnglǐ","vi":"tổng giám đốc","ex":{"cn":"他是总经理。","py":"Tā shì zǒngjīnglǐ.","vi":"Anh ấy là tổng giám đốc."}},{"cn":"生日","py":"shēngrì","vi":"sinh nhật","ex":{"cn":"我的生日是四月三十号。","py":"Wǒ de shēngrì shì sì yuè sānshí hào.","vi":"Sinh nhật của tôi là ngày 30 tháng 4."}}],"sentences":[{"cn":"三月。","py":"sān yuè.","vi":"tháng ba","words":["sān","yuè"]},{"cn":"今天我很高兴。","py":"Jīntiān wǒ hěn gāoxìng.","vi":"Hôm nay tôi rất vui.","words":["jīntiān","wǒ","hěn","gāoxìng"],"alts":[{"cn":"我今天很高兴。","words":["wǒ","jīntiān","hěn","gāoxìng"]}]},{"cn":"昨天是星期六。","py":"Zuótiān shì xīngqīliù.","vi":"Hôm qua là thứ bảy.","words":["zuótiān","shì","xīngqīliù"]},{"cn":"明天是星期二。","py":"Míngtiān shì xīngqī'èr.","vi":"Ngày mai là thứ ba.","words":["míngtiān","shì","xīngqīèr"]},{"cn":"今天是星期一。","py":"Jīntiān shì xīngqīyī.","vi":"Hôm nay là thứ hai.","words":["jīntiān","shì","xīngqīyī"]},{"cn":"他去中国出差。","py":"Tā qù Zhōngguó chūchāi.","vi":"Anh ấy đi công tác ở Trung Quốc.","words":["tā","qù","zhōngguó","chūchāi"]},{"cn":"他是总经理。","py":"Tā shì zǒngjīnglǐ.","vi":"Anh ấy là tổng giám đốc.","words":["tā","shì","zǒngjīnglǐ"]},{"cn":"我的生日是四月三十号。","py":"Wǒ de shēngrì shì sì yuè sānshí hào.","vi":"Sinh nhật của tôi là ngày 30 tháng 4.","words":["wǒ","de","shēngrì","shì","sì","yuè","sānshí","hào"]}]},{"lesson":8,"title":"Bài 8","vocab":[{"cn":"早上","py":"zǎoshang","vi":"buổi sáng","ex":{"cn":"早上好！","py":"Zǎoshang hǎo!","vi":"Chào buổi sáng!"}},{"cn":"中午","py":"zhōngwǔ","vi":"buổi trưa"},{"cn":"早饭","py":"zǎofàn","vi":"bữa sáng","ex":{"cn":"你吃早饭了吗？","py":"Nǐ chī zǎofàn le ma?","vi":"Bạn ăn sáng chưa?"}},{"cn":"午饭","py":"wǔfàn","vi":"bữa trưa"},{"cn":"晚饭","py":"wǎnfàn","vi":"bữa tối"},{"cn":"点","py":"diǎn","vi":"giờ (chỉ thời điểm)","ex":{"cn":"我八点吃早饭","py":"Wǒ bā diǎn chī zǎofàn.","vi":"Tám giờ tôi ăn sáng."}},{"cn":"吃","py":"chī","vi":"ăn","ex":{"cn":"你吃什么？","py":"Nǐ chī shénme?","vi":"Bạn ăn gì?"}},{"cn":"现在","py":"xiànzài","vi":"bây giờ","ex":{"cn":"现在几点？","py":"Xiànzài jǐ diǎn?","vi":"Bây giờ là mấy giờ?"}},{"cn":"分","py":"fēn","vi":"phút","ex":{"cn":"现在八点十分。","py":"Xiànzài bā diǎn shí fēn.","vi":"Bây giờ là 8 giờ 10 phút."}},{"cn":"对","py":"duì","vi":"đúng; phải","ex":{"cn":"对，我是老师。","py":"Duì, wǒ shì lǎoshī.","vi":"Đúng, tôi là giáo viên."}},{"cn":"请问","py":"qǐngwèn","vi":"xin hỏi","ex":{"cn":"请问，现在几点？","py":"Qǐngwèn, xiànzài jǐ diǎn?","vi":"Xin hỏi, bây giờ là mấy giờ?"}},{"cn":"时间","py":"shíjiān","vi":"thời gian","ex":{"cn":"我没有时间。","py":"Wǒ méiyǒu shíjiān.","vi":"Tôi không có thời gian."}}],"sentences":[{"cn":"早上好！","py":"Zǎoshang hǎo!","vi":"Chào buổi sáng!","words":["zǎoshang","hǎo"]},{"cn":"你吃早饭了吗？","py":"Nǐ chī zǎofàn le ma?","vi":"Bạn ăn sáng chưa?","words":["nǐ","chī","zǎofàn","le","ma"]},{"cn":"我八点吃早饭","py":"Wǒ bā diǎn chī zǎofàn.","vi":"Tám giờ tôi ăn sáng.","words":["wǒ","bā","diǎn","chī","zǎofàn"],"alts":[{"cn":"八点我吃早饭","words":["bā","diǎn","wǒ","chī","zǎofàn"]}]},{"cn":"你吃什么？","py":"Nǐ chī shénme?","vi":"Bạn ăn gì?","words":["nǐ","chī","shénme"]},{"cn":"现在几点？","py":"Xiànzài jǐ diǎn?","vi":"Bây giờ là mấy giờ?","words":["xiànzài","jǐ","diǎn"]},{"cn":"现在八点十分。","py":"Xiànzài bā diǎn shí fēn.","vi":"Bây giờ là 8 giờ 10 phút.","words":["xiànzài","bā","diǎn","shí","fēn"]},{"cn":"对，我是老师。","py":"Duì, wǒ shì lǎoshī.","vi":"Đúng, tôi là giáo viên.","words":["duì","wǒ","shì","lǎoshī"]},{"cn":"请问，现在几点？","py":"Qǐngwèn, xiànzài jǐ diǎn?","vi":"Xin hỏi, bây giờ là mấy giờ?","words":["qǐngwèn","xiànzài","jǐ","diǎn"]},{"cn":"我没有时间。","py":"Wǒ méiyǒu shíjiān.","vi":"Tôi không có thời gian.","words":["wǒ","méiyǒu","shíjiān"]}]},{"lesson":9,"title":"Bài 9","vocab":[{"cn":"上班","py":"shàngbān","vi":"đi làm","ex":{"cn":"我明天不上班。","py":"Wǒ míngtiān bú shàngbān.","vi":"Ngày mai tôi không đi làm."}},{"cn":"下班","py":"xiàbān","vi":"tan làm","ex":{"cn":"你几点下班？","py":"Nǐ jǐ diǎn xiàbān?","vi":"Mấy giờ bạn tan làm?"}},{"cn":"上课","py":"shàngkè","vi":"vào học; lên lớp","ex":{"cn":"我们明天上课。","py":"Wǒmen míngtiān shàngkè.","vi":"Ngày mai chúng tôi có giờ học."}},{"cn":"下课","py":"xiàkè","vi":"tan học; hết giờ","ex":{"cn":"下课了。","py":"Xiàkè le.","vi":"Tan học rồi."}},{"cn":"饭","py":"fàn","vi":"cơm; bữa ăn","ex":{"cn":"你吃饭了吗？","py":"Nǐ chīfàn le ma?","vi":"Bạn ăn cơm chưa?"}},{"cn":"一起","py":"yìqǐ","vi":"cùng nhau","ex":{"cn":"我们一起吃饭吧。","py":"Wǒmen yìqǐ chīfàn ba.","vi":"Chúng ta cùng nhau ăn cơm nhé."}},{"cn":"吧","py":"ba","vi":"nhé; đi (trợ từ đề nghị)","ex":{"cn":"你坐吧。","py":"Nǐ zuò ba.","vi":"Bạn ngồi đi."}},{"cn":"见","py":"jiàn","vi":"gặp","ex":{"cn":"明天见！","py":"Míngtiān jiàn!","vi":"Ngày mai gặp lại!"}}],"sentences":[{"cn":"我明天不上班。","py":"Wǒ míngtiān bú shàngbān.","vi":"Ngày mai tôi không đi làm.","words":["wǒ","míngtiān","bú","shàngbān"],"alts":[{"cn":"明天我不上班。","words":["míngtiān","wǒ","bú","shàngbān"]}]},{"cn":"你几点下班？","py":"Nǐ jǐ diǎn xiàbān?","vi":"Mấy giờ bạn tan làm?","words":["nǐ","jǐ","diǎn","xiàbān"]},{"cn":"我们明天上课。","py":"Wǒmen míngtiān shàngkè.","vi":"Ngày mai chúng tôi có giờ học.","words":["wǒmen","míngtiān","shàngkè"],"alts":[{"cn":"明天我们上课。","words":["míngtiān","wǒmen","shàngkè"]}]},{"cn":"下课了。","py":"Xiàkè le.","vi":"Tan học rồi.","words":["xiàkè","le"]},{"cn":"你吃饭了吗？","py":"Nǐ chīfàn le ma?","vi":"Bạn ăn cơm chưa?","words":["nǐ","chīfàn","le","ma"]},{"cn":"我们一起吃饭吧。","py":"Wǒmen yìqǐ chīfàn ba.","vi":"Chúng ta cùng nhau ăn cơm nhé.","words":["wǒmen","yìqǐ","chīfàn","ba"]},{"cn":"你坐吧。","py":"Nǐ zuò ba.","vi":"Bạn ngồi đi.","words":["nǐ","zuò","ba"]},{"cn":"明天见！","py":"Míngtiān jiàn!","vi":"Ngày mai gặp lại!","words":["míngtiān","jiàn"]}]},{"lesson":10,"title":"Bài 10","vocab":[{"cn":"爸爸","py":"bàba","vi":"bố; ba","ex":{"cn":"我爸爸是老师。","py":"Wǒ bàba shì lǎoshī.","vi":"Bố tôi là giáo viên."}},{"cn":"妈妈","py":"māma","vi":"mẹ","ex":{"cn":"我妈妈很漂亮。","py":"Wǒ māma hěn piàoliang.","vi":"Mẹ tôi rất xinh đẹp."}},{"cn":"姐姐","py":"jiějie","vi":"chị gái","ex":{"cn":"我姐姐是学生。","py":"Wǒ jiějie shì xuéshēng.","vi":"Chị gái tôi là học sinh."}},{"cn":"妹妹","py":"mèimei","vi":"em gái","ex":{"cn":"我妹妹很可爱。","py":"Wǒ mèimei hěn kě'ài.","vi":"Em gái tôi rất đáng yêu."}},{"cn":"弟弟","py":"dìdi","vi":"em trai","ex":{"cn":"我弟弟是学生。","py":"Wǒ dìdi shì xuéshēng.","vi":"Em trai tôi là học sinh."}},{"cn":"这","py":"zhè","vi":"này; đây","ex":{"cn":"这是我爸爸。","py":"Zhè shì wǒ bàba.","vi":"Đây là bố tôi."}},{"cn":"同事","py":"tóngshì","vi":"đồng nghiệp","ex":{"cn":"她是我的同事。","py":"Tā shì wǒ de tóngshì.","vi":"Cô ấy là đồng nghiệp của tôi."}},{"cn":"欢迎","py":"huānyíng","vi":"hoan nghênh; chào mừng","ex":{"cn":"欢迎你来中国。","py":"Huānyíng nǐ lái Zhōngguó.","vi":"Hoan nghênh bạn đến Trung Quốc."}},{"cn":"阿姨","py":"āyí","vi":"cô; dì","ex":{"cn":"阿姨，您好！","py":"Āyí, nín hǎo!","vi":"Cháu chào cô!"}},{"cn":"多大","py":"duō dà","vi":"bao nhiêu tuổi (hỏi tuổi)","ex":{"cn":"你今年多大？","py":"Nǐ jīnnián duō dà?","vi":"Năm nay bạn bao nhiêu tuổi?"}},{"cn":"岁","py":"suì","vi":"tuổi","ex":{"cn":"我弟弟十岁。","py":"Wǒ dìdi shí suì.","vi":"Em trai tôi 10 tuổi."}},{"cn":"家","py":"jiā","vi":"nhà; gia đình","ex":{"cn":"这是我的家。","py":"Zhè shì wǒ de jiā.","vi":"Đây là nhà của tôi."}},{"cn":"有","py":"yǒu","vi":"có","ex":{"cn":"你有妹妹吗？","py":"Nǐ yǒu mèimei ma?","vi":"Bạn có em gái không?"}},{"cn":"口","py":"kǒu","vi":"khẩu (lượng từ chỉ số người trong gia đình)","ex":{"cn":"我家有四口人。","py":"Wǒ jiā yǒu sì kǒu rén.","vi":"Nhà tôi có bốn người."}},{"cn":"和","py":"hé","vi":"và; với","ex":{"cn":"我有弟弟和妹妹。","py":"Wǒ yǒu dìdi hé mèimei.","vi":"Tôi có em trai và em gái."}},{"cn":"问题","py":"wèntí","vi":"câu hỏi; vấn đề","ex":{"cn":"我有一个问题。","py":"Wǒ yǒu yí ge wèntí.","vi":"Tôi có một câu hỏi."}},{"cn":"多","py":"duō","vi":"nhiều; bao nhiêu (hỏi mức độ)","ex":{"cn":"你的朋友多吗？","py":"Nǐ de péngyou duō ma?","vi":"Bạn bè của bạn có nhiều không?"}}],"sentences":[{"cn":"我爸爸是老师。","py":"Wǒ bàba shì lǎoshī.","vi":"Bố tôi là giáo viên.","words":["wǒ","bàba","shì","lǎoshī"]},{"cn":"我妈妈很漂亮。","py":"Wǒ māma hěn piàoliang.","vi":"Mẹ tôi rất xinh đẹp.","words":["wǒ","māma","hěn","piàoliang"]},{"cn":"我姐姐是学生。","py":"Wǒ jiějie shì xuéshēng.","vi":"Chị gái tôi là học sinh.","words":["wǒ","jiějie","shì","xuéshēng"]},{"cn":"我妹妹很可爱。","py":"Wǒ mèimei hěn kě'ài.","vi":"Em gái tôi rất đáng yêu.","words":["wǒ","mèimei","hěn","kěài"]},{"cn":"我弟弟是学生。","py":"Wǒ dìdi shì xuéshēng.","vi":"Em trai tôi là học sinh.","words":["wǒ","dìdi","shì","xuéshēng"]},{"cn":"这是我爸爸。","py":"Zhè shì wǒ bàba.","vi":"Đây là bố tôi.","words":["zhè","shì","wǒ","bàba"]},{"cn":"她是我的同事。","py":"Tā shì wǒ de tóngshì.","vi":"Cô ấy là đồng nghiệp của tôi.","words":["tā","shì","wǒ","de","tóngshì"]},{"cn":"欢迎你来中国。","py":"Huānyíng nǐ lái Zhōngguó.","vi":"Hoan nghênh bạn đến Trung Quốc.","words":["huānyíng","nǐ","lái","zhōngguó"]},{"cn":"阿姨，您好！","py":"Āyí, nín hǎo!","vi":"Cháu chào cô!","words":["āyí","nín","hǎo"]},{"cn":"你今年多大？","py":"Nǐ jīnnián duō dà?","vi":"Năm nay bạn bao nhiêu tuổi?","words":["nǐ","jīnnián","duō","dà"]},{"cn":"我弟弟十岁。","py":"Wǒ dìdi shí suì.","vi":"Em trai tôi 10 tuổi.","words":["wǒ","dìdi","shí","suì"]},{"cn":"这是我的家。","py":"Zhè shì wǒ de jiā.","vi":"Đây là nhà của tôi.","words":["zhè","shì","wǒ","de","jiā"]},{"cn":"你有妹妹吗？","py":"Nǐ yǒu mèimei ma?","vi":"Bạn có em gái không?","words":["nǐ","yǒu","mèimei","ma"]},{"cn":"我家有四口人。","py":"Wǒ jiā yǒu sì kǒu rén.","vi":"Nhà tôi có bốn người.","words":["wǒ","jiā","yǒu","sì","kǒu","rén"]},{"cn":"我有弟弟和妹妹。","py":"Wǒ yǒu dìdi hé mèimei.","vi":"Tôi có em trai và em gái.","words":["wǒ","yǒu","dìdi","hé","mèimei"]},{"cn":"我有一个问题。","py":"Wǒ yǒu yí ge wèntí.","vi":"Tôi có một câu hỏi.","words":["wǒ","yǒu","yí","ge","wèntí"]},{"cn":"你的朋友多吗？","py":"Nǐ de péngyou duō ma?","vi":"Bạn bè của bạn có nhiều không?","words":["nǐ","de","péngyou","duō","ma"],"alts":[{"cn":"你朋友多吗？","words":["nǐ","péngyou","duō","ma"]}]}]},{"lesson":11,"title":"Bài 11","vocab":[{"cn":"谁","py":"shéi","vi":"ai","ex":{"cn":"他是谁？","py":"Tā shì shéi?","vi":"Anh ấy là ai?"}},{"cn":"在","py":"zài","vi":"ở; tại","ex":{"cn":"我在家。","py":"Wǒ zài jiā.","vi":"Tôi ở nhà."}},{"cn":"哪儿","py":"nǎr","vi":"ở đâu","ex":{"cn":"你在哪儿？","py":"Nǐ zài nǎr?","vi":"Bạn đang ở đâu?"}},{"cn":"学习","py":"xuéxí","vi":"học; học tập","ex":{"cn":"我学习汉语。","py":"Wǒ xuéxí Hànyǔ.","vi":"Tôi học tiếng Trung."}},{"cn":"大学","py":"dàxué","vi":"đại học","ex":{"cn":"她在大学学习。","py":"Tā zài dàxué xuéxí.","vi":"Cô ấy học ở trường đại học."}},{"cn":"做","py":"zuò","vi":"làm","ex":{"cn":"我妈妈做饭。","py":"Wǒ māma zuòfàn.","vi":"Mẹ tôi nấu cơm."}},{"cn":"工作","py":"gōngzuò","vi":"công việc; làm việc","ex":{"cn":"你做什么工作？","py":"Nǐ zuò shénme gōngzuò?","vi":"Bạn làm công việc gì?"}},{"cn":"医生","py":"yīshēng","vi":"bác sĩ","ex":{"cn":"他不是老师，他是医生。","py":"Tā bú shì lǎoshī, tā shì yīshēng.","vi":"Anh ấy không phải là giáo viên, anh ấy là bác sĩ."}},{"cn":"银行","py":"yínháng","vi":"ngân hàng","ex":{"cn":"他在银行工作。","py":"Tā zài yínháng gōngzuò.","vi":"Anh ấy làm việc ở ngân hàng."}},{"cn":"职员","py":"zhíyuán","vi":"nhân viên (văn phòng)","ex":{"cn":"她是银行职员。","py":"Tā shì yínháng zhíyuán.","vi":"Cô ấy là nhân viên ngân hàng."}},{"cn":"医院","py":"yīyuàn","vi":"bệnh viện","ex":{"cn":"我妈妈在医院工作。","py":"Wǒ māma zài yīyuàn gōngzuò.","vi":"Mẹ tôi làm việc ở bệnh viện."}}],"sentences":[{"cn":"他是谁？","py":"Tā shì shéi?","vi":"Anh ấy là ai?","words":["tā","shì","shéi"]},{"cn":"我在家。","py":"Wǒ zài jiā.","vi":"Tôi ở nhà.","words":["wǒ","zài","jiā"]},{"cn":"你在哪儿？","py":"Nǐ zài nǎr?","vi":"Bạn đang ở đâu?","words":["nǐ","zài","nǎr"]},{"cn":"我学习汉语。","py":"Wǒ xuéxí Hànyǔ.","vi":"Tôi học tiếng Trung.","words":["wǒ","xuéxí","hànyǔ"]},{"cn":"她在大学学习。","py":"Tā zài dàxué xuéxí.","vi":"Cô ấy học ở trường đại học.","words":["tā","zài","dàxué","xuéxí"]},{"cn":"我妈妈做饭。","py":"Wǒ māma zuòfàn.","vi":"Mẹ tôi nấu cơm.","words":["wǒ","māma","zuòfàn"]},{"cn":"你做什么工作？","py":"Nǐ zuò shénme gōngzuò?","vi":"Bạn làm công việc gì?","words":["nǐ","zuò","shénme","gōngzuò"]},{"cn":"他不是老师，他是医生。","py":"Tā bú shì lǎoshī, tā shì yīshēng.","vi":"Anh ấy không phải là giáo viên, anh ấy là bác sĩ.","words":["tā","bú","shì","lǎoshī","tā","shì","yīshēng"]},{"cn":"他在银行工作。","py":"Tā zài yínháng gōngzuò.","vi":"Anh ấy làm việc ở ngân hàng.","words":["tā","zài","yínháng","gōngzuò"]},{"cn":"她是银行职员。","py":"Tā shì yínháng zhíyuán.","vi":"Cô ấy là nhân viên ngân hàng.","words":["tā","shì","yínháng","zhíyuán"]},{"cn":"我妈妈在医院工作。","py":"Wǒ māma zài yīyuàn gōngzuò.","vi":"Mẹ tôi làm việc ở bệnh viện.","words":["wǒ","māma","zài","yīyuàn","gōngzuò"]}]},{"lesson":12,"title":"Bài 12","vocab":[{"cn":"怎么","py":"zěnme","vi":"thế nào; làm sao"},{"cn":"称呼","py":"chēnghu","vi":"xưng hô; gọi là","ex":{"cn":"请问，怎么称呼您？","py":"Qǐngwèn, zěnme chēnghu nín?","vi":"Xin hỏi, nên xưng hô với ông thế nào ạ?"}},{"cn":"先生","py":"xiānsheng","vi":"ông; ngài; tiên sinh"},{"cn":"小","py":"xiǎo","vi":"nhỏ; bé; Tiểu (tiền tố gọi thân mật)"},{"cn":"公司","py":"gōngsī","vi":"công ty","ex":{"cn":"我在公司工作。","py":"Wǒ zài gōngsī gōngzuò.","vi":"Tôi làm việc ở công ty."}},{"cn":"名片","py":"míngpiàn","vi":"danh thiếp","ex":{"cn":"这是我的名片。","py":"Zhè shì wǒ de míngpiàn.","vi":"Đây là danh thiếp của tôi."}},{"cn":"多","py":"duō","vi":"nhiều","ex":{"cn":"公司的员工很多。","py":"Gōngsī de yuángōng hěn duō.","vi":"Công ty có rất nhiều nhân viên."}},{"cn":"员工","py":"yuángōng","vi":"nhân viên","ex":{"cn":"你的部门有多少员工？","py":"Nǐ de bùmén yǒu duōshao yuángōng?","vi":"Bộ phận của bạn có bao nhiêu nhân viên?"}},{"cn":"都","py":"dōu","vi":"đều","ex":{"cn":"我们都是学生。","py":"Wǒmen dōu shì xuéshēng.","vi":"Chúng tôi đều là học sinh."}},{"cn":"律师","py":"lǜshī","vi":"luật sư","ex":{"cn":"她不是律师。","py":"Tā bú shì lǜshī.","vi":"Cô ấy không phải là luật sư."}}],"sentences":[{"cn":"请问，怎么称呼您？","py":"Qǐngwèn, zěnme chēnghu nín?","vi":"Xin hỏi, nên xưng hô với ông thế nào ạ?","words":["qǐngwèn","zěnme","chēnghu","nín"]},{"cn":"我在公司工作。","py":"Wǒ zài gōngsī gōngzuò.","vi":"Tôi làm việc ở công ty.","words":["wǒ","zài","gōngsī","gōngzuò"]},{"cn":"这是我的名片。","py":"Zhè shì wǒ de míngpiàn.","vi":"Đây là danh thiếp của tôi.","words":["zhè","shì","wǒ","de","míngpiàn"]},{"cn":"公司的员工很多。","py":"Gōngsī de yuángōng hěn duō.","vi":"Công ty có rất nhiều nhân viên.","words":["gōngsī","de","yuángōng","hěn","duō"]},{"cn":"你的部门有多少员工？","py":"Nǐ de bùmén yǒu duōshao yuángōng?","vi":"Bộ phận của bạn có bao nhiêu nhân viên?","words":["nǐ","de","bùmén","yǒu","duōshao","yuángōng"]},{"cn":"我们都是学生。","py":"Wǒmen dōu shì xuéshēng.","vi":"Chúng tôi đều là học sinh.","words":["wǒmen","dōu","shì","xuéshēng"]},{"cn":"她不是律师。","py":"Tā bú shì lǜshī.","vi":"Cô ấy không phải là luật sư.","words":["tā","bú","shì","lǜshī"]}]},{"lesson":13,"title":"Bài 13","vocab":[{"cn":"西瓜","py":"xīguā","vi":"dưa hấu","ex":{"cn":"我喜欢吃西瓜。","py":"Wǒ xǐhuan chī xīguā.","vi":"Tôi thích ăn dưa hấu."}},{"cn":"苹果","py":"píngguǒ","vi":"táo (quả táo)","ex":{"cn":"我喜欢吃苹果。","py":"Wǒ xǐhuan chī píngguǒ.","vi":"Tôi thích ăn táo."}},{"cn":"钱","py":"qián","vi":"tiền","ex":{"cn":"这个多少钱？","py":"Zhège duōshao qián?","vi":"Cái này bao nhiêu tiền?"}},{"cn":"斤","py":"jīn","vi":"cân (500 g)","ex":{"cn":"苹果多少钱一斤？","py":"Píngguǒ duōshao qián yì jīn?","vi":"Táo bao nhiêu tiền một cân?"}},{"cn":"两","py":"liǎng","vi":"hai (dùng trước lượng từ)","ex":{"cn":"两斤西瓜多少钱？","py":"Liǎng jīn xīguā duōshao qián?","vi":"Hai cân dưa hấu bao nhiêu tiền?"}},{"cn":"块","py":"kuài","vi":"đồng (tệ) – cách nói khẩu ngữ","ex":{"cn":"五块钱一斤。","py":"Wǔ kuài qián yì jīn.","vi":"Năm đồng một cân."}},{"cn":"要","py":"yào","vi":"muốn; cần","ex":{"cn":"我要一斤苹果。","py":"Wǒ yào yì jīn píngguǒ.","vi":"Tôi muốn một cân táo."}},{"cn":"卖","py":"mài","vi":"bán","ex":{"cn":"你们卖苹果吗？","py":"Nǐmen mài píngguǒ ma?","vi":"Các bạn có bán táo không?"}},{"cn":"一共","py":"yígòng","vi":"tổng cộng","ex":{"cn":"一共多少钱？","py":"Yígòng duōshao qián?","vi":"Tổng cộng bao nhiêu tiền?"}}],"sentences":[{"cn":"我喜欢吃西瓜。","py":"Wǒ xǐhuan chī xīguā.","vi":"Tôi thích ăn dưa hấu.","words":["wǒ","xǐhuan","chī","xīguā"]},{"cn":"我喜欢吃苹果。","py":"Wǒ xǐhuan chī píngguǒ.","vi":"Tôi thích ăn táo.","words":["wǒ","xǐhuan","chī","píngguǒ"]},{"cn":"这个多少钱？","py":"Zhège duōshao qián?","vi":"Cái này bao nhiêu tiền?","words":["zhège","duōshao","qián"]},{"cn":"苹果多少钱一斤？","py":"Píngguǒ duōshao qián yì jīn?","vi":"Táo bao nhiêu tiền một cân?","words":["píngguǒ","duōshao","qián","yì","jīn"]},{"cn":"两斤西瓜多少钱？","py":"Liǎng jīn xīguā duōshao qián?","vi":"Hai cân dưa hấu bao nhiêu tiền?","words":["liǎng","jīn","xīguā","duōshao","qián"]},{"cn":"五块钱一斤。","py":"Wǔ kuài qián yì jīn.","vi":"Năm đồng một cân.","words":["wǔ","kuài","qián","yì","jīn"]},{"cn":"我要一斤苹果。","py":"Wǒ yào yì jīn píngguǒ.","vi":"Tôi muốn một cân táo.","words":["wǒ","yào","yì","jīn","píngguǒ"]},{"cn":"你们卖苹果吗？","py":"Nǐmen mài píngguǒ ma?","vi":"Các bạn có bán táo không?","words":["nǐmen","mài","píngguǒ","ma"]},{"cn":"一共多少钱？","py":"Yígòng duōshao qián?","vi":"Tổng cộng bao nhiêu tiền?","words":["yígòng","duōshao","qián"]}]},{"lesson":14,"title":"Bài 14","vocab":[{"cn":"买","py":"mǎi","vi":"mua","ex":{"cn":"你买什么？","py":"Nǐ mǎi shénme?","vi":"Bạn mua gì?"}},{"cn":"瓶","py":"píng","vi":"chai; bình","ex":{"cn":"我要一瓶水。","py":"Wǒ yào yì píng shuǐ.","vi":"Tôi muốn một chai nước."}},{"cn":"矿泉水","py":"kuàngquánshuǐ","vi":"nước khoáng","ex":{"cn":"我买一瓶矿泉水。","py":"Wǒ mǎi yì píng kuàngquánshuǐ.","vi":"Tôi mua một chai nước khoáng."}},{"cn":"咖啡","py":"kāfēi","vi":"cà phê","ex":{"cn":"我喜欢喝咖啡。","py":"Wǒ xǐhuan hē kāfēi.","vi":"Tôi thích uống cà phê."}},{"cn":"给","py":"gěi","vi":"cho; đưa","ex":{"cn":"他给我一瓶水。","py":"Tā gěi wǒ yì píng shuǐ.","vi":"Anh ấy đưa cho tôi một chai nước."}},{"cn":"还","py":"hái","vi":"còn; vẫn còn","ex":{"cn":"我还要一瓶水。","py":"Wǒ hái yào yì píng shuǐ.","vi":"Tôi còn muốn một chai nước nữa."}},{"cn":"别的","py":"biéde","vi":"cái khác; thứ khác","ex":{"cn":"你还要别的吗？","py":"Nǐ hái yào biéde ma?","vi":"Bạn còn muốn thứ gì khác không?"}},{"cn":"面包","py":"miànbāo","vi":"bánh mì","ex":{"cn":"我买一个面包。","py":"Wǒ mǎi yí ge miànbāo.","vi":"Tôi mua một cái bánh mì."}}],"sentences":[{"cn":"你买什么？","py":"Nǐ mǎi shénme?","vi":"Bạn mua gì?","words":["nǐ","mǎi","shénme"]},{"cn":"我要一瓶水。","py":"Wǒ yào yì píng shuǐ.","vi":"Tôi muốn một chai nước.","words":["wǒ","yào","yì","píng","shuǐ"]},{"cn":"我买一瓶矿泉水。","py":"Wǒ mǎi yì píng kuàngquánshuǐ.","vi":"Tôi mua một chai nước khoáng.","words":["wǒ","mǎi","yì","píng","kuàngquánshuǐ"]},{"cn":"我喜欢喝咖啡。","py":"Wǒ xǐhuan hē kāfēi.","vi":"Tôi thích uống cà phê.","words":["wǒ","xǐhuan","hē","kāfēi"]},{"cn":"他给我一瓶水。","py":"Tā gěi wǒ yì píng shuǐ.","vi":"Anh ấy đưa cho tôi một chai nước.","words":["tā","gěi","wǒ","yì","píng","shuǐ"]},{"cn":"我还要一瓶水。","py":"Wǒ hái yào yì píng shuǐ.","vi":"Tôi còn muốn một chai nước nữa.","words":["wǒ","hái","yào","yì","píng","shuǐ"]},{"cn":"你还要别的吗？","py":"Nǐ hái yào biéde ma?","vi":"Bạn còn muốn thứ gì khác không?","words":["nǐ","hái","yào","biéde","ma"]},{"cn":"我买一个面包。","py":"Wǒ mǎi yí ge miànbāo.","vi":"Tôi mua một cái bánh mì.","words":["wǒ","mǎi","yí","ge","miànbāo"]}]},{"lesson":15,"title":"Bài 15","vocab":[{"cn":"杯","py":"bēi","vi":"cốc; ly","ex":{"cn":"我喝两杯水。","py":"Wǒ hē liǎng bēi shuǐ.","vi":"Tôi uống hai ly nước."}},{"cn":"冰","py":"bīng","vi":"đá; lạnh","ex":{"cn":"我喝冰咖啡。","py":"Wǒ  hē bīng kāfēi.","vi":"Tôi  uống cà phê đá."}},{"cn":"热","py":"rè","vi":"nóng","ex":{"cn":"你喝一杯热咖啡吗？","py":"Nǐ hē yì bēi rè kāfēi ma?","vi":"Bạn uống một ly cà phê nóng không?"}},{"cn":"还是","py":"háishi","vi":"hay là","ex":{"cn":"你喝咖啡还是茶？","py":"Nǐ hē kāfēi háishi chá?","vi":"Bạn uống cà phê hay là trà?"}},{"cn":"美式","py":"měishì","vi":"(cà phê) Americano; kiểu Mỹ","ex":{"cn":"我要一杯美式。","py":"Wǒ yào yì bēi měishì.","vi":"Tôi muốn một ly Americano."}},{"cn":"拿铁","py":"nátiě","vi":"latte","ex":{"cn":"我喜欢喝拿铁。","py":"Wǒ xǐhuan hē nátiě.","vi":"Tôi thích uống latte."}},{"cn":"种","py":"zhǒng","vi":"loại; thứ","ex":{"cn":"有两种咖啡。","py":"Yǒu liǎng zhǒng kāfēi.","vi":"Có hai loại cà phê."}},{"cn":"蛋糕","py":"dàngāo","vi":"bánh ngọt; bánh kem","ex":{"cn":"我吃蛋糕。","py":"Wǒ chī dàngāo.","vi":"Tôi ăn bánh kem."}},{"cn":"特价","py":"tèjià","vi":"giá đặc biệt; khuyến mãi","ex":{"cn":"今天蛋糕特价。","py":"Jīntiān dàngāo tèjià.","vi":"Hôm nay bánh kem đang khuyến mãi."}},{"cn":"块儿","py":"kuàir","vi":"miếng; cục (lượng từ)","ex":{"cn":"我要一块儿蛋糕。","py":"Wǒ yào yí kuàir dàngāo.","vi":"Cho tôi một miếng bánh."}},{"cn":"便宜","py":"piányi","vi":"rẻ","ex":{"cn":"这个蛋糕很便宜。","py":"Zhège dàngāo hěn piányi.","vi":"Cái bánh này rất rẻ."}},{"cn":"微信","py":"Wēixìn","vi":"WeChat","ex":{"cn":"你有微信吗？","py":"Nǐ yǒu Wēixìn ma?","vi":"Bạn có WeChat không?"}}],"sentences":[{"cn":"我喝两杯水。","py":"Wǒ hē liǎng bēi shuǐ.","vi":"Tôi uống hai ly nước.","words":["wǒ","hē","liǎng","bēi","shuǐ"]},{"cn":"我喝冰咖啡。","py":"Wǒ  hē bīng kāfēi.","vi":"Tôi  uống cà phê đá.","words":["wǒ","hē","bīng","kāfēi"]},{"cn":"你喝一杯热咖啡吗？","py":"Nǐ hē yì bēi rè kāfēi ma?","vi":"Bạn uống một ly cà phê nóng không?","words":["nǐ","hē","yì","bēi","rè","kāfēi","ma"]},{"cn":"你喝咖啡还是茶？","py":"Nǐ hē kāfēi háishi chá?","vi":"Bạn uống cà phê hay là trà?","words":["nǐ","hē","kāfēi","háishi","chá"]},{"cn":"我要一杯美式。","py":"Wǒ yào yì bēi měishì.","vi":"Tôi muốn một ly Americano.","words":["wǒ","yào","yì","bēi","měishì"]},{"cn":"我喜欢喝拿铁。","py":"Wǒ xǐhuan hē nátiě.","vi":"Tôi thích uống latte.","words":["wǒ","xǐhuan","hē","nátiě"]},{"cn":"有两种咖啡。","py":"Yǒu liǎng zhǒng kāfēi.","vi":"Có hai loại cà phê.","words":["yǒu","liǎng","zhǒng","kāfēi"]},{"cn":"我吃蛋糕。","py":"Wǒ chī dàngāo.","vi":"Tôi ăn bánh kem.","words":["wǒ","chī","dàngāo"]},{"cn":"今天蛋糕特价。","py":"Jīntiān dàngāo tèjià.","vi":"Hôm nay bánh kem đang khuyến mãi.","words":["jīntiān","dàngāo","tèjià"]},{"cn":"我要一块儿蛋糕。","py":"Wǒ yào yí kuàir dàngāo.","vi":"Cho tôi một miếng bánh.","words":["wǒ","yào","yí","kuàir","dàngāo"]},{"cn":"这个蛋糕很便宜。","py":"Zhège dàngāo hěn piányi.","vi":"Cái bánh này rất rẻ.","words":["zhège","dàngāo","hěn","piányi"]},{"cn":"你有微信吗？","py":"Nǐ yǒu Wēixìn ma?","vi":"Bạn có WeChat không?","words":["nǐ","yǒu","wēixìn","ma"]}]},{"lesson":16,"title":"Bài 16","vocab":[{"cn":"菜","py":"cài","vi":"món ăn; rau","ex":{"cn":"你喜欢吃什么菜？","py":"Nǐ xǐhuan chī shénme cài?","vi":"Bạn thích ăn món gì?"}},{"cn":"菜单","py":"càidān","vi":"thực đơn","ex":{"cn":"这是菜单。","py":"Zhè shì càidān","vi":"Đây là thực đơn."}},{"cn":"点菜","py":"diǎn cài","vi":"gọi món","ex":{"cn":"我们点菜吧。","py":"Wǒmen diǎn cài ba.","vi":"Chúng ta gọi món nhé."}},{"cn":"酸辣汤","py":"suānlàtāng","vi":"canh chua cay","ex":{"cn":"我喝酸辣汤。","py":"Wǒ hē suānlàtāng.","vi":"Tôi uống canh chua cay."}},{"cn":"碗","py":"wǎn","vi":"bát; chén","ex":{"cn":"我要一碗米饭。","py":"Wǒ yào yì wǎn mǐfàn.","vi":"Tôi muốn một bát cơm."}},{"cn":"米饭","py":"mǐfàn","vi":"cơm (gạo)","ex":{"cn":"我喜欢吃米饭。","py":"Wǒ xǐhuan chī mǐfàn.","vi":"Tôi thích ăn cơm."}},{"cn":"壶","py":"hú","vi":"ấm; bình","ex":{"cn":"我要一壶茶。","py":"Wǒ yào yì hú chá.","vi":"Tôi muốn một ấm trà."}},{"cn":"茶","py":"chá","vi":"trà","ex":{"cn":"你喝茶吗？","py":"Nǐ hē chá ma?","vi":"Bạn có uống trà không?"}},{"cn":"忌口","py":"jìkǒu","vi":"kiêng ăn","ex":{"cn":"你有什么忌口吗？","py":"Nǐ yǒu shénme jìkǒu ma?","vi":"Bạn có kiêng món gì không?"}},{"cn":"别","py":"bié","vi":"đừng"},{"cn":"香菜","py":"xiāngcài","vi":"rau mùi (ngò rí)","ex":{"cn":"我不吃香菜。","py":"Wǒ bù chī xiāngcài.","vi":"Tôi không ăn rau mùi."}},{"cn":"放","py":"fàng","vi":"cho vào; để; đặt","ex":{"cn":"别放香菜。","py":"bié fàng xiāngcài.","vi":"đừng cho rau mùi."}},{"cn":"张","py":"zhāng","vi":"tờ; tấm (lượng từ cho vật phẳng)"},{"cn":"餐巾纸","py":"cānjīnzhǐ","vi":"giấy ăn","ex":{"cn":"请给我餐巾纸。","py":"Qǐng gěi wǒ cānjīnzhǐ.","vi":"Làm ơn cho tôi giấy ăn."}},{"cn":"服务员","py":"fúwùyuán","vi":"nhân viên phục vụ","ex":{"cn":"她是服务员。","py":"Tā shì fúwùyuán.","vi":"Cô ấy là nhân viên phục vụ."}},{"cn":"买单","py":"mǎidān","vi":"thanh toán; tính tiền","ex":{"cn":"服务员，买单！","py":"Fúwùyuán, mǎidān!","vi":"Phục vụ ơi, tính tiền!"}},{"cn":"打包","py":"dǎbāo","vi":"gói mang về","ex":{"cn":"这个菜我要打包。","py":"Zhège cài wǒ yaò dǎbāo.","vi":"Món này tôi muốn gói mang về."}}],"sentences":[{"cn":"你喜欢吃什么菜？","py":"Nǐ xǐhuan chī shénme cài?","vi":"Bạn thích ăn món gì?","words":["nǐ","xǐhuan","chī","shénme","cài"]},{"cn":"这是菜单。","py":"Zhè shì càidān","vi":"Đây là thực đơn.","words":["zhè","shì","càidān"]},{"cn":"我们点菜吧。","py":"Wǒmen diǎn cài ba.","vi":"Chúng ta gọi món nhé.","words":["wǒmen","diǎn","cài","ba"]},{"cn":"我喝酸辣汤。","py":"Wǒ hē suānlàtāng.","vi":"Tôi uống canh chua cay.","words":["wǒ","hē","suānlàtāng"]},{"cn":"我要一碗米饭。","py":"Wǒ yào yì wǎn mǐfàn.","vi":"Tôi muốn một bát cơm.","words":["wǒ","yào","yì","wǎn","mǐfàn"]},{"cn":"我喜欢吃米饭。","py":"Wǒ xǐhuan chī mǐfàn.","vi":"Tôi thích ăn cơm.","words":["wǒ","xǐhuan","chī","mǐfàn"]},{"cn":"我要一壶茶。","py":"Wǒ yào yì hú chá.","vi":"Tôi muốn một ấm trà.","words":["wǒ","yào","yì","hú","chá"]},{"cn":"你喝茶吗？","py":"Nǐ hē chá ma?","vi":"Bạn có uống trà không?","words":["nǐ","hē","chá","ma"]},{"cn":"你有什么忌口吗？","py":"Nǐ yǒu shénme jìkǒu ma?","vi":"Bạn có kiêng món gì không?","words":["nǐ","yǒu","shénme","jìkǒu","ma"]},{"cn":"我不吃香菜。","py":"Wǒ bù chī xiāngcài.","vi":"Tôi không ăn rau mùi.","words":["wǒ","bù","chī","xiāngcài"]},{"cn":"别放香菜。","py":"bié fàng xiāngcài.","vi":"đừng cho rau mùi.","words":["bié","fàng","xiāngcài"]},{"cn":"请给我餐巾纸。","py":"Qǐng gěi wǒ cānjīnzhǐ.","vi":"Làm ơn cho tôi giấy ăn.","words":["qǐng","gěi","wǒ","cānjīnzhǐ"]},{"cn":"她是服务员。","py":"Tā shì fúwùyuán.","vi":"Cô ấy là nhân viên phục vụ.","words":["tā","shì","fúwùyuán"]},{"cn":"服务员，买单！","py":"Fúwùyuán, mǎidān!","vi":"Phục vụ ơi, tính tiền!","words":["fúwùyuán","mǎidān"]},{"cn":"这个菜我要打包。","py":"Zhège cài wǒ yaò dǎbāo.","vi":"Món này tôi muốn gói mang về.","words":["zhège","cài","wǒ","yaò","dǎbāo"]}]},{"lesson":17,"title":"Bài 17","vocab":[{"cn":"加入","py":"jiārù","vi":"gia nhập; tham gia","ex":{"cn":"欢迎你加入我们公司。","py":"Huānyíng nǐ jiārù wǒmen gōngsī.","vi":"Hoan nghênh bạn gia nhập công ty chúng tôi."}},{"cn":"办公室","py":"bàngōngshì","vi":"văn phòng","ex":{"cn":"这是经理的办公室。","py":"Zhè shì jīnglǐ de bàngōngshì.","vi":"Đây là văn phòng của giám đốc."}},{"cn":"位置","py":"wèizhi","vi":"vị trí; chỗ","ex":{"cn":"我的位置在哪儿？","py":"Wǒ de wèizhi zài nǎr?","vi":"Chỗ ngồi của tôi ở đâu?"}},{"cn":"这儿","py":"zhèr","vi":"ở đây; chỗ này","ex":{"cn":"我的办公室在这儿。","py":"Wǒ de bàngōngshì zài zhèr.","vi":"Văn phòng của tôi ở đây."}},{"cn":"那儿","py":"nàr","vi":"ở đó; chỗ kia","ex":{"cn":"我的公司在那儿。","py":"Wǒ de gōngsī zài nàr.","vi":"Công ty tôi ở đằng kia."}},{"cn":"左边","py":"zuǒbian","vi":"bên trái","ex":{"cn":"我家在学校的左边。","py":"Wǒ jiā zài xuéxiào de zuǒbian.","vi":"Nhà tôi ở bên trái trường học."}},{"cn":"右边","py":"yòubian","vi":"bên phải","ex":{"cn":"我的公司在公园的右边。","py":"Wǒ de gōngsī zài gōngyuán de yòubian.","vi":"Công ty tôi ở bên phải công viên."}},{"cn":"前边","py":"qiánbian","vi":"phía trước","ex":{"cn":"我家前边有一个商场。","py":"Wǒ jiā qiánbian yǒu yí ge shāngchǎng.","vi":"Trước nhà tôi có một trung tâm thương mại."}},{"cn":"后边","py":"hòubian","vi":"phía sau","ex":{"cn":"学校后边是一家银行。","py":"Xuéxiào hòubian shì yì jiā yínháng.","vi":"Đằng sau trường học là một ngân hàng."}},{"cn":"上边","py":"shàngbian","vi":"phía trên","ex":{"cn":"经理的办公室在上边。","py":"Jīnglǐ de bàngōngshì zài shàngbian.","vi":"Văn phòng giám đốc ở phía trên."}},{"cn":"下边","py":"xiàbian","vi":"phía dưới","ex":{"cn":"会议室在下边。","py":"Huìyìshì zài xiàbian.","vi":"Phòng họp ở phía dưới."}},{"cn":"里边","py":"lǐbian","vi":"bên trong","ex":{"cn":"经理在办公室里边。","py":"Jīnglǐ zài bàngōngshì lǐbian.","vi":"Giám đốc ở bên trong văn phòng."}},{"cn":"中间","py":"zhōngjiān","vi":"ở giữa","ex":{"cn":"银行在公司和公园的中间。","py":"Yínháng zài gōngsī hé gōngyuán de zhōngjiān.","vi":"Ngân hàng ở giữa công ty và công viên."}},{"cn":"真","py":"zhēn","vi":"thật; thật là","ex":{"cn":"你们公司真大！","py":"Nǐmen gōngsī zhēn dà!","vi":"Công ty của các bạn thật là to!"}},{"cn":"非常","py":"fēicháng","vi":"rất; vô cùng","ex":{"cn":"这个办公室非常漂亮。","py":"Zhège bàngōngshì fēicháng piàoliang.","vi":"Văn phòng này vô cùng đẹp."}},{"cn":"会议室","py":"huìyìshì","vi":"phòng họp","ex":{"cn":"这个会议室很大。","py":"Zhège huìyìshì hěn dà.","vi":"Phòng họp này rất to."}}],"sentences":[{"cn":"欢迎你加入我们公司。","py":"Huānyíng nǐ jiārù wǒmen gōngsī.","vi":"Hoan nghênh bạn gia nhập công ty chúng tôi.","words":["huānyíng","nǐ","jiārù","wǒmen","gōngsī"]},{"cn":"这是经理的办公室。","py":"Zhè shì jīnglǐ de bàngōngshì.","vi":"Đây là văn phòng của giám đốc.","words":["zhè","shì","jīnglǐ","de","bàngōngshì"]},{"cn":"我的位置在哪儿？","py":"Wǒ de wèizhi zài nǎr?","vi":"Chỗ ngồi của tôi ở đâu?","words":["wǒ","de","wèizhi","zài","nǎr"]},{"cn":"我的办公室在这儿。","py":"Wǒ de bàngōngshì zài zhèr.","vi":"Văn phòng của tôi ở đây.","words":["wǒ","de","bàngōngshì","zài","zhèr"]},{"cn":"我的公司在那儿。","py":"Wǒ de gōngsī zài nàr.","vi":"Công ty tôi ở đằng kia.","words":["wǒ","de","gōngsī","zài","nàr"]},{"cn":"我家在学校的左边。","py":"Wǒ jiā zài xuéxiào de zuǒbian.","vi":"Nhà tôi ở bên trái trường học.","words":["wǒ","jiā","zài","xuéxiào","de","zuǒbian"]},{"cn":"我的公司在公园的右边。","py":"Wǒ de gōngsī zài gōngyuán de yòubian.","vi":"Công ty tôi ở bên phải công viên.","words":["wǒ","de","gōngsī","zài","gōngyuán","de","yòubian"]},{"cn":"我家前边有一个商场。","py":"Wǒ jiā qiánbian yǒu yí ge shāngchǎng.","vi":"Trước nhà tôi có một trung tâm thương mại.","words":["wǒ","jiā","qiánbian","yǒu","yí","ge","shāngchǎng"]},{"cn":"学校后边是一家银行。","py":"Xuéxiào hòubian shì yì jiā yínháng.","vi":"Đằng sau trường học là một ngân hàng.","words":["xuéxiào","hòubian","shì","yì","jiā","yínháng"]},{"cn":"经理的办公室在上边。","py":"Jīnglǐ de bàngōngshì zài shàngbian.","vi":"Văn phòng giám đốc ở phía trên.","words":["jīnglǐ","de","bàngōngshì","zài","shàngbian"]},{"cn":"会议室在下边。","py":"Huìyìshì zài xiàbian.","vi":"Phòng họp ở phía dưới.","words":["huìyìshì","zài","xiàbian"]},{"cn":"经理在办公室里边。","py":"Jīnglǐ zài bàngōngshì lǐbian.","vi":"Giám đốc ở bên trong văn phòng.","words":["jīnglǐ","zài","bàngōngshì","lǐbian"]},{"cn":"银行在公司和公园的中间。","py":"Yínháng zài gōngsī hé gōngyuán de zhōngjiān.","vi":"Ngân hàng ở giữa công ty và công viên.","words":["yínháng","zài","gōngsī","hé","gōngyuán","de","zhōngjiān"]},{"cn":"你们公司真大！","py":"Nǐmen gōngsī zhēn dà!","vi":"Công ty của các bạn thật là to!","words":["nǐmen","gōngsī","zhēn","dà"]},{"cn":"这个办公室非常漂亮。","py":"Zhège bàngōngshì fēicháng piàoliang.","vi":"Văn phòng này vô cùng đẹp.","words":["zhège","bàngōngshì","fēicháng","piàoliang"]},{"cn":"这个会议室很大。","py":"Zhège huìyìshì hěn dà.","vi":"Phòng họp này rất to.","words":["zhège","huìyìshì","hěn","dà"]}]},{"lesson":18,"title":"Bài 18","vocab":[{"cn":"旁边","py":"pángbiān","vi":"bên cạnh","ex":{"cn":"公司旁边有一个公园。","py":"Gōngsī pángbiān yǒu yí ge gōngyuán.","vi":"Bên cạnh công ty có một công viên."}},{"cn":"附近","py":"fùjìn","vi":"gần; lân cận","ex":{"cn":"我家附近有一个商场。","py":"Wǒ jiā fùjìn yǒu yí ge shāngchǎng.","vi":"Gần nhà tôi có một trung tâm thương mại."}},{"cn":"对面","py":"duìmiàn","vi":"đối diện","ex":{"cn":"银行对面是商场。","py":"Yínháng duìmiàn shì shāngchǎng.","vi":"Đối diện ngân hàng là trung tâm thương mại."}},{"cn":"东边","py":"dōngbian","vi":"phía đông","ex":{"cn":"公园在公司的东边。","py":"Gōngyuán zài gōngsī de dōngbian.","vi":"Công viên ở phía đông công ty."}},{"cn":"西边","py":"xībian","vi":"phía tây","ex":{"cn":"银行在商场的西边。","py":"Yínháng zài shāngchǎng de xībian.","vi":"Ngân hàng ở phía tây trung tâm thương mại."}},{"cn":"南边","py":"nánbian","vi":"phía nam","ex":{"cn":"我家在公园的南边。","py":"Wǒ jiā zài gōngyuán de nánbian.","vi":"Nhà tôi ở phía nam công viên."}},{"cn":"北边","py":"běibian","vi":"phía bắc","ex":{"cn":"医院在银行的北边。","py":"Yīyuàn zài yínháng de běibian.","vi":"Bệnh viện ở phía bắc ngân hàng."}},{"cn":"公园","py":"gōngyuán","vi":"công viên","ex":{"cn":"我们去公园吧。","py":"Wǒmen qù gōngyuán ba.","vi":"Chúng ta đi công viên nhé."}},{"cn":"商场","py":"shāngchǎng","vi":"trung tâm thương mại","ex":{"cn":"我想去商场。","py":"Wǒ xiǎng qù shāngchǎng.","vi":"Tôi muốn đi trung tâm thương mại."}},{"cn":"怎么样","py":"zěnmeyàng","vi":"thế nào; ra sao","ex":{"cn":"这个菜怎么样？","py":"Zhège cài zěnmeyàng?","vi":"Món ăn này như thế nào?"}},{"cn":"交通","py":"jiāotōng","vi":"giao thông","ex":{"cn":"这儿的交通怎么样？","py":"Zhèr de jiāotōng zěnmeyàng?","vi":"Giao thông ở đây như thế nào?"}},{"cn":"方便","py":"fāngbiàn","vi":"thuận tiện","ex":{"cn":"这儿的交通很方便。","py":"Zhèr de jiāotōng hěn fāngbiàn.","vi":"Giao thông ở đây rất thuận tiện."}},{"cn":"地铁站","py":"dìtiězhàn","vi":"ga tàu điện ngầm","ex":{"cn":"附近有地铁站吗？","py":"Fùjìn yǒu dìtiězhàn ma?","vi":"Gần đây có ga tàu điện ngầm không?"}},{"cn":"公交车站","py":"gōngjiāochēzhàn","vi":"trạm xe buýt","ex":{"cn":"我家附近有一个公交车站。","py":"Wǒ jiā fùjìn yǒu yí ge gōngjiāochēzhàn.","vi":"Gần nhà tôi có một trạm xe buýt."}},{"cn":"或者","py":"huòzhě","vi":"hoặc; hoặc là","ex":{"cn":"我坐地铁或者公交车。","py":"Wǒ zuò dìtiě huòzhě gōngjiāochē.","vi":"Tôi ngồi tàu điện ngầm hoặc xe buýt."}},{"cn":"小区","py":"xiǎoqū","vi":"khu dân cư","ex":{"cn":"这个小区的交通很方便。","py":"Zhège xiǎoqū de jiāotōng hěn fāngbiàn.","vi":"Khu dân cư này giao thông rất thuận tiện."}}],"sentences":[{"cn":"公司旁边有一个公园。","py":"Gōngsī pángbiān yǒu yí ge gōngyuán.","vi":"Bên cạnh công ty có một công viên.","words":["gōngsī","pángbiān","yǒu","yí","ge","gōngyuán"]},{"cn":"我家附近有一个商场。","py":"Wǒ jiā fùjìn yǒu yí ge shāngchǎng.","vi":"Gần nhà tôi có một trung tâm thương mại.","words":["wǒ","jiā","fùjìn","yǒu","yí","ge","shāngchǎng"]},{"cn":"银行对面是商场。","py":"Yínháng duìmiàn shì shāngchǎng.","vi":"Đối diện ngân hàng là trung tâm thương mại.","words":["yínháng","duìmiàn","shì","shāngchǎng"]},{"cn":"公园在公司的东边。","py":"Gōngyuán zài gōngsī de dōngbian.","vi":"Công viên ở phía đông công ty.","words":["gōngyuán","zài","gōngsī","de","dōngbian"]},{"cn":"银行在商场的西边。","py":"Yínháng zài shāngchǎng de xībian.","vi":"Ngân hàng ở phía tây trung tâm thương mại.","words":["yínháng","zài","shāngchǎng","de","xībian"]},{"cn":"我家在公园的南边。","py":"Wǒ jiā zài gōngyuán de nánbian.","vi":"Nhà tôi ở phía nam công viên.","words":["wǒ","jiā","zài","gōngyuán","de","nánbian"]},{"cn":"医院在银行的北边。","py":"Yīyuàn zài yínháng de běibian.","vi":"Bệnh viện ở phía bắc ngân hàng.","words":["yīyuàn","zài","yínháng","de","běibian"]},{"cn":"我们去公园吧。","py":"Wǒmen qù gōngyuán ba.","vi":"Chúng ta đi công viên nhé.","words":["wǒmen","qù","gōngyuán","ba"]},{"cn":"我想去商场。","py":"Wǒ xiǎng qù shāngchǎng.","vi":"Tôi muốn đi trung tâm thương mại.","words":["wǒ","xiǎng","qù","shāngchǎng"]},{"cn":"这个菜怎么样？","py":"Zhège cài zěnmeyàng?","vi":"Món ăn này như thế nào?","words":["zhège","cài","zěnmeyàng"]},{"cn":"这儿的交通怎么样？","py":"Zhèr de jiāotōng zěnmeyàng?","vi":"Giao thông ở đây như thế nào?","words":["zhèr","de","jiāotōng","zěnmeyàng"]},{"cn":"这儿的交通很方便。","py":"Zhèr de jiāotōng hěn fāngbiàn.","vi":"Giao thông ở đây rất thuận tiện.","words":["zhèr","de","jiāotōng","hěn","fāngbiàn"]},{"cn":"附近有地铁站吗？","py":"Fùjìn yǒu dìtiězhàn ma?","vi":"Gần đây có ga tàu điện ngầm không?","words":["fùjìn","yǒu","dìtiězhàn","ma"]},{"cn":"我家附近有一个公交车站。","py":"Wǒ jiā fùjìn yǒu yí ge gōngjiāochēzhàn.","vi":"Gần nhà tôi có một trạm xe buýt.","words":["wǒ","jiā","fùjìn","yǒu","yí","ge","gōngjiāochēzhàn"]},{"cn":"我坐地铁或者公交车。","py":"Wǒ zuò dìtiě huòzhě gōngjiāochē.","vi":"Tôi ngồi tàu điện ngầm hoặc xe buýt.","words":["wǒ","zuò","dìtiě","huòzhě","gōngjiāochē"]},{"cn":"这个小区的交通很方便。","py":"Zhège xiǎoqū de jiāotōng hěn fāngbiàn.","vi":"Khu dân cư này giao thông rất thuận tiện.","words":["zhège","xiǎoqū","de","jiāotōng","hěn","fāngbiàn"]}]},{"lesson":19,"title":"Bài 19","vocab":[{"cn":"洗手间","py":"xǐshǒujiān","vi":"nhà vệ sinh","ex":{"cn":"请问，洗手间在哪儿？","py":"Qǐngwèn, xǐshǒujiān zài nǎr?","vi":"Xin hỏi, nhà vệ sinh ở đâu?"}},{"cn":"不好意思","py":"bù hǎoyìsi","vi":"xin lỗi; ngại quá","ex":{"cn":"不好意思，这儿没有洗手间。","py":"Bù hǎoyìsi, zhèr méiyǒu xǐshǒujiān.","vi":"Ngại quá, ở đây không có nhà vệ sinh."}},{"cn":"走","py":"zǒu","vi":"đi; đi bộ","ex":{"cn":"我们走吧！","py":"Wǒmen zǒu ba!","vi":"Chúng ta đi thôi!"}},{"cn":"出门","py":"chūmén","vi":"ra ngoài; ra khỏi cửa","ex":{"cn":"你出门.","py":"Nǐ chūmén.","vi":"Bạn đi ra ngoài cửa"}},{"cn":"往","py":"wǎng","vi":"hướng về; về phía","ex":{"cn":"往前走。","py":"Wǎng qián zǒu.","vi":"Đi thẳng về phía trước."}},{"cn":"拐","py":"guǎi","vi":"rẽ; quẹo","ex":{"cn":"往右拐。","py":"wǎng yòu guǎi.","vi":"rẽ phải."}},{"cn":"然后","py":"ránhòu","vi":"sau đó; rồi","ex":{"cn":"我们先吃饭，然后去看电影。","py":"Wǒmen xiān chīfàn, ránhòu qù kàn diànyǐng.","vi":"Chúng ta ăn cơm trước, sau đó đi xem phim."}},{"cn":"一直","py":"yìzhí","vi":"thẳng; cứ một mạch","ex":{"cn":"你一直往前走。","py":"Nǐ yìzhí wǎng qián zǒu.","vi":"Bạn cứ đi thẳng về phía trước."}},{"cn":"到","py":"dào","vi":"đến","ex":{"cn":"我到公司了。","py":"Wǒ dào gōngsī le.","vi":"Tôi đến công ty rồi."}},{"cn":"头儿","py":"tóur","vi":"đầu; cuối (của con đường)","ex":{"cn":"你往左拐，到头儿往右拐。","py":"Nǐ wǎng zuǒ guǎi, dào tóur wǎng yòu guǎi.","vi":"Bạn rẽ trái, đến cuối đường thì rẽ phải."}},{"cn":"就","py":"jiù","vi":"thì; ngay; chính là"},{"cn":"路口","py":"lùkǒu","vi":"ngã tư","ex":{"cn":"你一直走，到路口往右拐。","py":"Nǐ yìzhí zǒu, dào lùkǒu wǎng yòu guǎi.","vi":"Bạn đi thẳng, đến ngã tư thì rẽ phải."}}],"sentences":[{"cn":"请问，洗手间在哪儿？","py":"Qǐngwèn, xǐshǒujiān zài nǎr?","vi":"Xin hỏi, nhà vệ sinh ở đâu?","words":["qǐngwèn","xǐshǒujiān","zài","nǎr"]},{"cn":"不好意思，这儿没有洗手间。","py":"Bù hǎoyìsi, zhèr méiyǒu xǐshǒujiān.","vi":"Ngại quá, ở đây không có nhà vệ sinh.","words":["bù","hǎoyìsi","zhèr","méiyǒu","xǐshǒujiān"]},{"cn":"我们走吧！","py":"Wǒmen zǒu ba!","vi":"Chúng ta đi thôi!","words":["wǒmen","zǒu","ba"]},{"cn":"你出门.","py":"Nǐ chūmén.","vi":"Bạn đi ra ngoài cửa","words":["nǐ","chūmén"]},{"cn":"往前走。","py":"Wǎng qián zǒu.","vi":"Đi thẳng về phía trước.","words":["wǎng","qián","zǒu"]},{"cn":"往右拐。","py":"wǎng yòu guǎi.","vi":"rẽ phải.","words":["wǎng","yòu","guǎi"]},{"cn":"我们先吃饭，然后去看电影。","py":"Wǒmen xiān chīfàn, ránhòu qù kàn diànyǐng.","vi":"Chúng ta ăn cơm trước, sau đó đi xem phim.","words":["wǒmen","xiān","chīfàn","ránhòu","qù","kàn","diànyǐng"]},{"cn":"你一直往前走。","py":"Nǐ yìzhí wǎng qián zǒu.","vi":"Bạn cứ đi thẳng về phía trước.","words":["nǐ","yìzhí","wǎng","qián","zǒu"]},{"cn":"我到公司了。","py":"Wǒ dào gōngsī le.","vi":"Tôi đến công ty rồi.","words":["wǒ","dào","gōngsī","le"]},{"cn":"你往左拐，到头儿往右拐。","py":"Nǐ wǎng zuǒ guǎi, dào tóur wǎng yòu guǎi.","vi":"Bạn rẽ trái, đến cuối đường thì rẽ phải.","words":["nǐ","wǎng","zuǒ","guǎi","dào","tóur","wǎng","yòu","guǎi"]},{"cn":"你一直走，到路口往右拐。","py":"Nǐ yìzhí zǒu, dào lùkǒu wǎng yòu guǎi.","vi":"Bạn đi thẳng, đến ngã tư thì rẽ phải.","words":["nǐ","yìzhí","zǒu","dào","lùkǒu","wǎng","yòu","guǎi"]}]},{"lesson":20,"title":"Bài 20","vocab":[{"cn":"想","py":"xiǎng","vi":"muốn; nhớ","ex":{"cn":"我想去看电影。","py":"Wǒ xiǎng qù kàn diànyǐng.","vi":"Tôi muốn đi xem phim."}},{"cn":"去","py":"qù","vi":"đi","ex":{"cn":"你去哪儿？","py":"Nǐ qù nǎr?","vi":"Bạn đi đâu?"}},{"cn":"看","py":"kàn","vi":"xem; nhìn","ex":{"cn":"我看电视。","py":"Wǒ kàn diànshì.","vi":"Tôi xem ti vi."}},{"cn":"电影","py":"diànyǐng","vi":"phim; điện ảnh","ex":{"cn":"你喜欢看电影吗？","py":"Nǐ xǐhuan kàn diànyǐng ma?","vi":"Bạn thích xem phim không?"}},{"cn":"电影院","py":"diànyǐngyuàn","vi":"rạp chiếu phim","ex":{"cn":"电影院在商场里边。","py":"Diànyǐngyuàn zài shāngchǎng lǐbian.","vi":"Rạp chiếu phim ở trong trung tâm thương mại."}},{"cn":"听说","py":"tīngshuō","vi":"nghe nói","ex":{"cn":"听说这个电影很好。","py":"Tīngshuō zhège diànyǐng hěn haǒ .","vi":"Nghe nói bộ phim này rất hay."}},{"cn":"不错","py":"búcuò","vi":"không tệ; khá tốt","ex":{"cn":"这个菜不错。","py":"Zhège cài búcuò.","vi":"Món này khá ngon."}},{"cn":"行","py":"xíng","vi":"được; ổn","ex":{"cn":"明天去看电影，行吗？","py":"Míngtiān qù kàn diànyǐng, xíng ma?","vi":"Ngày mai đi xem phim, được không?"}},{"cn":"咱们","py":"zánmen","vi":"chúng ta (gồm cả người nghe)","ex":{"cn":"咱们去看电影吧。","py":"Zánmen qù kàn diànyǐng ba.","vi":"Chúng ta đi xem phim nhé."}},{"cn":"门口","py":"ménkǒu","vi":"cửa; cổng","ex":{"cn":"咱们在电影院门口见吧。","py":"Zánmen zài diànyǐngyuàn ménkǒu jiàn ba.","vi":"Chúng ta gặp nhau ở cổng rạp chiếu phim nhé."}}],"sentences":[{"cn":"我想去看电影。","py":"Wǒ xiǎng qù kàn diànyǐng.","vi":"Tôi muốn đi xem phim.","words":["wǒ","xiǎng","qù","kàn","diànyǐng"]},{"cn":"你去哪儿？","py":"Nǐ qù nǎr?","vi":"Bạn đi đâu?","words":["nǐ","qù","nǎr"]},{"cn":"我看电视。","py":"Wǒ kàn diànshì.","vi":"Tôi xem ti vi.","words":["wǒ","kàn","diànshì"]},{"cn":"你喜欢看电影吗？","py":"Nǐ xǐhuan kàn diànyǐng ma?","vi":"Bạn thích xem phim không?","words":["nǐ","xǐhuan","kàn","diànyǐng","ma"]},{"cn":"电影院在商场里边。","py":"Diànyǐngyuàn zài shāngchǎng lǐbian.","vi":"Rạp chiếu phim ở trong trung tâm thương mại.","words":["diànyǐngyuàn","zài","shāngchǎng","lǐbian"]},{"cn":"听说这个电影很好。","py":"Tīngshuō zhège diànyǐng hěn haǒ .","vi":"Nghe nói bộ phim này rất hay.","words":["tīngshuō","zhège","diànyǐng","hěn","haǒ"]},{"cn":"这个菜不错。","py":"Zhège cài búcuò.","vi":"Món này khá ngon.","words":["zhège","cài","búcuò"]},{"cn":"明天去看电影，行吗？","py":"Míngtiān qù kàn diànyǐng, xíng ma?","vi":"Ngày mai đi xem phim, được không?","words":["míngtiān","qù","kàn","diànyǐng","xíng","ma"]},{"cn":"咱们去看电影吧。","py":"Zánmen qù kàn diànyǐng ba.","vi":"Chúng ta đi xem phim nhé.","words":["zánmen","qù","kàn","diànyǐng","ba"]},{"cn":"咱们在电影院门口见吧。","py":"Zánmen zài diànyǐngyuàn ménkǒu jiàn ba.","vi":"Chúng ta gặp nhau ở cổng rạp chiếu phim nhé.","words":["zánmen","zài","diànyǐngyuàn","ménkǒu","jiàn","ba"]}]},{"lesson":21,"title":"Bài 21","vocab":[{"cn":"票","py":"piào","vi":"vé","ex":{"cn":"我买两张电影票。","py":"Wǒ mǎi liǎng zhāng diànyǐng piào.","vi":"Tôi mua hai vé xem phim."}},{"cn":"的时候","py":"de shíhou","vi":"khi; lúc","ex":{"cn":"吃饭的时候，我不看电视。","py":"Chīfàn de shíhou, wǒ bú kàn diànshì.","vi":"Lúc ăn cơm tôi không xem ti vi."}},{"cn":"重要","py":"zhòngyào","vi":"quan trọng","ex":{"cn":"这个问题很重要。","py":"Zhège wèntí hěn zhòngyào.","vi":"Vấn đề này rất quan trọng."}},{"cn":"会","py":"huì","vi":"sẽ (khả năng xảy ra); biết","ex":{"cn":"明天她会来。","py":"Míngtiān tā huì lái.","vi":"Ngày mai cô ấy sẽ đến."}},{"cn":"加班","py":"jiābān","vi":"tăng ca; làm thêm giờ","ex":{"cn":"今天晚上我要加班。","py":"Jīntiān wǎnshang wǒ yào jiābān.","vi":"Tối nay tôi phải tăng ca."}},{"cn":"能","py":"néng","vi":"có thể (có khả năng, có điều kiện)","ex":{"cn":"明天你能来吗？","py":"Míngtiān nǐ néng lái ma?","vi":"Ngày mai bạn có thể đến không?"}},{"cn":"一下儿","py":"yíxiàr","vi":"một chút; một lát"},{"cn":"舒服","py":"shūfu","vi":"thoải mái; dễ chịu (不舒服: khó chịu, không khỏe)","ex":{"cn":"今天我不舒服。","py":"Jīntiān wǒ bù shūfu.","vi":"Hôm nay tôi không khỏe."}}],"sentences":[{"cn":"我买两张电影票。","py":"Wǒ mǎi liǎng zhāng diànyǐng piào.","vi":"Tôi mua hai vé xem phim.","words":["wǒ","mǎi","liǎng","zhāng","diànyǐng","piào"]},{"cn":"吃饭的时候，我不看电视。","py":"Chīfàn de shíhou, wǒ bú kàn diànshì.","vi":"Lúc ăn cơm tôi không xem ti vi.","words":["chīfàn","de","shíhou","wǒ","bú","kàn","diànshì"]},{"cn":"这个问题很重要。","py":"Zhège wèntí hěn zhòngyào.","vi":"Vấn đề này rất quan trọng.","words":["zhège","wèntí","hěn","zhòngyào"]},{"cn":"明天她会来。","py":"Míngtiān tā huì lái.","vi":"Ngày mai cô ấy sẽ đến.","words":["míngtiān","tā","huì","lái"],"alts":[{"cn":"她明天会来。","words":["tā","míngtiān","huì","lái"]}]},{"cn":"今天晚上我要加班。","py":"Jīntiān wǎnshang wǒ yào jiābān.","vi":"Tối nay tôi phải tăng ca.","words":["jīntiān","wǎnshang","wǒ","yào","jiābān"],"alts":[{"cn":"我今天晚上要加班。","words":["wǒ","jīntiān","wǎnshang","yào","jiābān"]}]},{"cn":"明天你能来吗？","py":"Míngtiān nǐ néng lái ma?","vi":"Ngày mai bạn có thể đến không?","words":["míngtiān","nǐ","néng","lái","ma"],"alts":[{"cn":"你明天能来吗？","words":["nǐ","míngtiān","néng","lái","ma"]}]},{"cn":"今天我不舒服。","py":"Jīntiān wǒ bù shūfu.","vi":"Hôm nay tôi không khỏe.","words":["jīntiān","wǒ","bù","shūfu"],"alts":[{"cn":"我今天不舒服。","words":["wǒ","jīntiān","bù","shūfu"]}]}]},{"lesson":22,"title":"Bài 22","vocab":[{"cn":"住","py":"zhù","vi":"ở; sống","ex":{"cn":"你住在哪儿？","py":"Nǐ zhù zài nǎr?","vi":"Bạn sống ở đâu?"}},{"cn":"楼","py":"lóu","vi":"tầng; tòa nhà","ex":{"cn":"银行在一楼。","py":"Yínháng zài yī lóu.","vi":"Ngân hàng ở tầng một."}},{"cn":"房间","py":"fángjiān","vi":"phòng","ex":{"cn":"她的房间很漂亮。","py":"Tā de fángjiān hěn piàoliang.","vi":"Phòng của cô ấy rất đẹp."}},{"cn":"觉得","py":"juéde","vi":"cảm thấy; thấy rằng","ex":{"cn":"你觉得这个菜好吃吗？","py":"Nǐ juéde zhège cài hǎochī ma?","vi":"Bạn thấy món ăn này ngon không?"}},{"cn":"挺……的","py":"tǐng…de","vi":"khá… (mức độ khá cao)","ex":{"cn":"这个房间挺大的。","py":"Zhège fángjiān tǐng dà de.","vi":"Căn phòng này khá lớn."}},{"cn":"电视","py":"diànshì","vi":"ti vi","ex":{"cn":"我喜欢看电视。","py":"wǒ xǐhuān kàn diànshì","vi":"Tôi thích xem tivi."}},{"cn":"可以","py":"kěyǐ","vi":"có thể; được phép","ex":{"cn":"我可以坐在这儿吗？","py":"Wǒ kěyǐ zuò zài zhèr ma?","vi":"Tôi có thể ngồi ở đây không?"}},{"cn":"上网","py":"shàngwǎng","vi":"lên mạng; vào internet","ex":{"cn":"房间里可以上网。","py":"Fángjiān lǐ kěyǐ shàngwǎng.","vi":"Trong phòng có thể lên mạng."}},{"cn":"洗澡","py":"xǐzǎo","vi":"tắm","ex":{"cn":"我每天晚上洗澡。","py":"Wǒ měitiān wǎnshang xǐzǎo.","vi":"Mỗi tối tôi đều tắm."}},{"cn":"做饭","py":"zuòfàn","vi":"nấu cơm; nấu ăn","ex":{"cn":"我会做饭。","py":"Wǒ huì zuòfàn.","vi":"Tôi biết nấu ăn."}},{"cn":"公共","py":"gōnggòng","vi":"công cộng","ex":{"cn":"这是公共厨房。","py":"Zhè shì gōnggòng chúfáng.","vi":"Đây là nhà bếp công cộng."}},{"cn":"厨房","py":"chúfáng","vi":"nhà bếp","ex":{"cn":"我妈妈在厨房做饭。","py":"Wǒ māma zài chúfáng zuòfàn.","vi":"Mẹ tôi nấu cơm ở nhà bếp."}},{"cn":"换","py":"huàn","vi":"đổi; thay","ex":{"cn":"我想换工作。","py":"Wǒ xiǎng huàn gōngzuò.","vi":"Tôi muốn đổi công việc."}},{"cn":"宿舍","py":"sùshè","vi":"ký túc xá","ex":{"cn":"我住在宿舍。","py":"Wǒ zhù zài sùshè.","vi":"Tôi sống ở ký túc xá."}}],"sentences":[{"cn":"你住在哪儿？","py":"Nǐ zhù zài nǎr?","vi":"Bạn sống ở đâu?","words":["nǐ","zhù","zài","nǎr"]},{"cn":"银行在一楼。","py":"Yínháng zài yī lóu.","vi":"Ngân hàng ở tầng một.","words":["yínháng","zài","yī","lóu"]},{"cn":"她的房间很漂亮。","py":"Tā de fángjiān hěn piàoliang.","vi":"Phòng của cô ấy rất đẹp.","words":["tā","de","fángjiān","hěn","piàoliang"]},{"cn":"你觉得这个菜好吃吗？","py":"Nǐ juéde zhège cài hǎochī ma?","vi":"Bạn thấy món ăn này ngon không?","words":["nǐ","juéde","zhège","cài","hǎochī","ma"]},{"cn":"这个房间挺大的。","py":"Zhège fángjiān tǐng dà de.","vi":"Căn phòng này khá lớn.","words":["zhège","fángjiān","tǐng","dà","de"]},{"cn":"我喜欢看电视。","py":"wǒ xǐhuān kàn diànshì","vi":"Tôi thích xem tivi.","words":["wǒ","xǐhuān","kàn","diànshì"]},{"cn":"我可以坐在这儿吗？","py":"Wǒ kěyǐ zuò zài zhèr ma?","vi":"Tôi có thể ngồi ở đây không?","words":["wǒ","kěyǐ","zuò","zài","zhèr","ma"]},{"cn":"房间里可以上网。","py":"Fángjiān lǐ kěyǐ shàngwǎng.","vi":"Trong phòng có thể lên mạng.","words":["fángjiān","lǐ","kěyǐ","shàngwǎng"]},{"cn":"我每天晚上洗澡。","py":"Wǒ měitiān wǎnshang xǐzǎo.","vi":"Mỗi tối tôi đều tắm.","words":["wǒ","měitiān","wǎnshang","xǐzǎo"]},{"cn":"我会做饭。","py":"Wǒ huì zuòfàn.","vi":"Tôi biết nấu ăn.","words":["wǒ","huì","zuòfàn"]},{"cn":"这是公共厨房。","py":"Zhè shì gōnggòng chúfáng.","vi":"Đây là nhà bếp công cộng.","words":["zhè","shì","gōnggòng","chúfáng"]},{"cn":"我妈妈在厨房做饭。","py":"Wǒ māma zài chúfáng zuòfàn.","vi":"Mẹ tôi nấu cơm ở nhà bếp.","words":["wǒ","māma","zài","chúfáng","zuòfàn"]},{"cn":"我想换工作。","py":"Wǒ xiǎng huàn gōngzuò.","vi":"Tôi muốn đổi công việc.","words":["wǒ","xiǎng","huàn","gōngzuò"]},{"cn":"我住在宿舍。","py":"Wǒ zhù zài sùshè.","vi":"Tôi sống ở ký túc xá.","words":["wǒ","zhù","zài","sùshè"]}]},{"lesson":23,"title":"Bài 23","vocab":[{"cn":"找","py":"zhǎo","vi":"tìm","ex":{"cn":"你找谁？","py":"Nǐ zhǎo shéi?","vi":"Bạn tìm ai?"}},{"cn":"事儿","py":"shìr","vi":"việc; chuyện","ex":{"cn":"有什么事儿吗？","py":"Yǒu shénme shìr ma?","vi":"Có chuyện gì không?"}},{"cn":"一些","py":"yìxiē","vi":"một ít; một vài","ex":{"cn":"我想买一些苹果。","py":"Wǒ xiǎng mǎi yìxiē píngguǒ.","vi":"Tôi muốn mua một ít táo."}},{"cn":"帮","py":"bāng","vi":"giúp; giúp đỡ","ex":{"cn":"你可以帮我吗？","py":"Nǐ kěyǐ bāng wǒ ma?","vi":"Bạn có thể giúp tôi không?"}},{"cn":"没问题","py":"méi wèntí","vi":"không vấn đề gì","ex":{"cn":"没问题，我可以帮你。","py":"Méi wèntí, wǒ kěyǐ bāng nǐ.","vi":"Không vấn đề gì, tôi có thể giúp bạn."}},{"cn":"空儿","py":"kòngr","vi":"thời gian rảnh","ex":{"cn":"明天你有空儿吗？","py":"Míngtiān nǐ yǒu kòngr ma?","vi":"Ngày mai bạn có rảnh không?"}},{"cn":"后","py":"hòu","vi":"sau; sau khi","ex":{"cn":"下班后，我们去吃饭。","py":"Xiàbān hòu, wǒmen qù chīfàn.","vi":"Sau khi tan làm, chúng ta đi ăn cơm."}}],"sentences":[{"cn":"你找谁？","py":"Nǐ zhǎo shéi?","vi":"Bạn tìm ai?","words":["nǐ","zhǎo","shéi"]},{"cn":"有什么事儿吗？","py":"Yǒu shénme shìr ma?","vi":"Có chuyện gì không?","words":["yǒu","shénme","shìr","ma"]},{"cn":"我想买一些苹果。","py":"Wǒ xiǎng mǎi yìxiē píngguǒ.","vi":"Tôi muốn mua một ít táo.","words":["wǒ","xiǎng","mǎi","yìxiē","píngguǒ"]},{"cn":"你可以帮我吗？","py":"Nǐ kěyǐ bāng wǒ ma?","vi":"Bạn có thể giúp tôi không?","words":["nǐ","kěyǐ","bāng","wǒ","ma"]},{"cn":"没问题，我可以帮你。","py":"Méi wèntí, wǒ kěyǐ bāng nǐ.","vi":"Không vấn đề gì, tôi có thể giúp bạn.","words":["méi","wèntí","wǒ","kěyǐ","bāng","nǐ"]},{"cn":"明天你有空儿吗？","py":"Míngtiān nǐ yǒu kòngr ma?","vi":"Ngày mai bạn có rảnh không?","words":["míngtiān","nǐ","yǒu","kòngr","ma"],"alts":[{"cn":"你明天有空儿吗？","words":["nǐ","míngtiān","yǒu","kòngr","ma"]}]},{"cn":"下班后，我们去吃饭。","py":"Xiàbān hòu, wǒmen qù chīfàn.","vi":"Sau khi tan làm, chúng ta đi ăn cơm.","words":["xiàbān","hòu","wǒmen","qù","chīfàn"]}]},{"lesson":24,"title":"Bài 24","vocab":[{"cn":"这里","py":"zhèlǐ","vi":"ở đây; chỗ này","ex":{"cn":"这里有洗手间吗？","py":"Zhèlǐ yǒu xǐshǒujiān ma?","vi":"Ở đây có nhà vệ sinh không?"}},{"cn":"每","py":"měi","vi":"mỗi","ex":{"cn":"我每天都学习汉语。","py":"Wǒ měitiān dōu xuéxí Hànyǔ.","vi":"Mỗi ngày tôi đều học tiếng Trung."}},{"cn":"跟","py":"gēn","vi":"với; cùng","ex":{"cn":"我跟朋友去看电影。","py":"Wǒ gēn péngyou qù kàn diànyǐng.","vi":"Tôi đi xem phim cùng bạn."}},{"cn":"视频","py":"shìpín","vi":"video; (gọi) video","ex":{"cn":"我每天都跟妈妈视频。","py":"Wǒ měitiān dōu gēn māma shìpín.","vi":"Mỗi ngày tôi đều gọi video với mẹ."}},{"cn":"老家","py":"lǎojiā","vi":"quê nhà; quê gốc","ex":{"cn":"我的老家在越南。","py":"Wǒ de lǎojiā zài Yuènán.","vi":"Quê tôi ở Việt Nam."}},{"cn":"常常","py":"chángcháng","vi":"thường xuyên","ex":{"cn":"我常常跟朋友去喝咖啡。","py":"Wǒ chángcháng gēn péngyou qù hē kāfēi.","vi":"Tôi thường cùng bạn đi uống cà phê."}},{"cn":"平时","py":"píngshí","vi":"ngày thường; bình thường","ex":{"cn":"平时我坐地铁上班。","py":"Píngshí wǒ zuò dìtiě shàngbān.","vi":"Ngày thường tôi đi tàu điện ngầm đi làm."}},{"cn":"回","py":"huí","vi":"về; trở về","ex":{"cn":"我回家。","py":"Wǒ huí jiā.","vi":"Tôi về nhà."}},{"cn":"一般","py":"yìbān","vi":"thường; nhìn chung","ex":{"cn":"我一般在公司吃饭。","py":"Wǒ yìbān zài gōngsī chīfàn.","vi":"Tôi thường ăn cơm ở công ty."}},{"cn":"放假","py":"fàngjià","vi":"nghỉ (lễ, phép)","ex":{"cn":"明天我们放假。","py":"Míngtiān wǒmen fàngjià.","vi":"Ngày mai chúng tôi được nghỉ."}}],"sentences":[{"cn":"这里有洗手间吗？","py":"Zhèlǐ yǒu xǐshǒujiān ma?","vi":"Ở đây có nhà vệ sinh không?","words":["zhèlǐ","yǒu","xǐshǒujiān","ma"]},{"cn":"我每天都学习汉语。","py":"Wǒ měitiān dōu xuéxí Hànyǔ.","vi":"Mỗi ngày tôi đều học tiếng Trung.","words":["wǒ","měitiān","dōu","xuéxí","hànyǔ"],"alts":[{"cn":"每天我都学习汉语。","words":["měitiān","wǒ","dōu","xuéxí","hànyǔ"]}]},{"cn":"我跟朋友去看电影。","py":"Wǒ gēn péngyou qù kàn diànyǐng.","vi":"Tôi đi xem phim cùng bạn.","words":["wǒ","gēn","péngyou","qù","kàn","diànyǐng"]},{"cn":"我每天都跟妈妈视频。","py":"Wǒ měitiān dōu gēn māma shìpín.","vi":"Mỗi ngày tôi đều gọi video với mẹ.","words":["wǒ","měitiān","dōu","gēn","māma","shìpín"],"alts":[{"cn":"每天我都跟妈妈视频。","words":["měitiān","wǒ","dōu","gēn","māma","shìpín"]}]},{"cn":"我的老家在越南。","py":"Wǒ de lǎojiā zài Yuènán.","vi":"Quê tôi ở Việt Nam.","words":["wǒ","de","lǎojiā","zài","yuènán"]},{"cn":"我常常跟朋友去喝咖啡。","py":"Wǒ chángcháng gēn péngyou qù hē kāfēi.","vi":"Tôi thường cùng bạn đi uống cà phê.","words":["wǒ","chángcháng","gēn","péngyou","qù","hē","kāfēi"]},{"cn":"平时我坐地铁上班。","py":"Píngshí wǒ zuò dìtiě shàngbān.","vi":"Ngày thường tôi đi tàu điện ngầm đi làm.","words":["píngshí","wǒ","zuò","dìtiě","shàngbān"]},{"cn":"我回家。","py":"Wǒ huí jiā.","vi":"Tôi về nhà.","words":["wǒ","huí","jiā"]},{"cn":"我一般在公司吃饭。","py":"Wǒ yìbān zài gōngsī chīfàn.","vi":"Tôi thường ăn cơm ở công ty.","words":["wǒ","yìbān","zài","gōngsī","chīfàn"]},{"cn":"明天我们放假。","py":"Míngtiān wǒmen fàngjià.","vi":"Ngày mai chúng tôi được nghỉ.","words":["míngtiān","wǒmen","fàngjià"],"alts":[{"cn":"我们明天放假。","words":["wǒmen","míngtiān","fàngjià"]}]}]},{"lesson":25,"title":"Bài 25","vocab":[{"cn":"骑","py":"qí","vi":"cưỡi; đi (xe đạp, xe máy)","ex":{"cn":"我在公园骑自行车。","py":"Wǒ zài gōngyuán qí zìxíngchē.","vi":"Tôi đi xe đạp ở công viên."}},{"cn":"车","py":"chē","vi":"xe","ex":{"cn":"这是我的车。","py":"Zhè shì wǒ de chē.","vi":"Đây là xe của tôi."}},{"cn":"骑摩托车","py":"qí mótuōchē","vi":"đi xe máy","ex":{"cn":"我骑摩托车去公司。","py":"Wǒ qí mótuōchē qù gōngsī.","vi":"Tôi đi xe máy đến công ty."}},{"cn":"离","py":"lí","vi":"cách (khoảng cách từ... đến...)"},{"cn":"近","py":"jìn","vi":"gần","ex":{"cn":"我家离公司很近。","py":"Wǒ jiā lí gōngsī hěn jìn.","vi":"Nhà tôi cách công ty rất gần."}},{"cn":"远","py":"yuǎn","vi":"xa","ex":{"cn":"我家离公司很远。","py":"Wǒ jiā lí gōngsī hěn yuǎn.","vi":"Nhà tôi cách công ty rất xa."}},{"cn":"天气","py":"tiānqì","vi":"thời tiết","ex":{"cn":"今天天气很热。","py":"Jīntiān tiānqì hěn rè.","vi":"Hôm nay thời tiết rất nóng."}},{"cn":"坐","py":"zuò","vi":"ngồi; đi (bằng phương tiện)","ex":{"cn":"我坐公交车去公司。","py":"Wǒ zuò gōngjiāochē qù gōngsī.","vi":"Tôi đi xe buýt đến công ty."}},{"cn":"开","py":"kāi","vi":"lái (xe); (4 bánh)","ex":{"cn":"我开车回老家。","py":"Wǒ kāichē huí lǎojiā.","vi":"Tôi lái xe về quê."}},{"cn":"地铁","py":"dìtiě","vi":"tàu điện ngầm","ex":{"cn":"我坐地铁上班。","py":"Wǒ zuò dìtiě shàngbān.","vi":"Tôi đi tàu điện ngầm đi làm."}},{"cn":"出租车","py":"chūzūchē","vi":"taxi","ex":{"cn":"我不常坐出租车。","py":"Wǒ bù cháng zuò chūzūchē.","vi":"Tôi không thường đi taxi."}},{"cn":"火车","py":"huǒchē","vi":"tàu hỏa","ex":{"cn":"我想坐火车回老家。","py":"Wǒ xiǎng zuò huǒchē huí lǎojiā.","vi":"Tôi muốn đi tàu hỏa về quê."}},{"cn":"飞机","py":"fēijī","vi":"máy bay","ex":{"cn":"我坐飞机去中国。","py":"Wǒ zuò fēijī qù Zhōngguó.","vi":"Tôi đi máy bay đến Trung Quốc."}}],"sentences":[{"cn":"我在公园骑自行车。","py":"Wǒ zài gōngyuán qí zìxíngchē.","vi":"Tôi đi xe đạp ở công viên.","words":["wǒ","zài","gōngyuán","qí","zìxíngchē"]},{"cn":"这是我的车。","py":"Zhè shì wǒ de chē.","vi":"Đây là xe của tôi.","words":["zhè","shì","wǒ","de","chē"]},{"cn":"我骑摩托车去公司。","py":"Wǒ qí mótuōchē qù gōngsī.","vi":"Tôi đi xe máy đến công ty.","words":["wǒ","qí","mótuōchē","qù","gōngsī"]},{"cn":"我家离公司很近。","py":"Wǒ jiā lí gōngsī hěn jìn.","vi":"Nhà tôi cách công ty rất gần.","words":["wǒ","jiā","lí","gōngsī","hěn","jìn"]},{"cn":"我家离公司很远。","py":"Wǒ jiā lí gōngsī hěn yuǎn.","vi":"Nhà tôi cách công ty rất xa.","words":["wǒ","jiā","lí","gōngsī","hěn","yuǎn"]},{"cn":"今天天气很热。","py":"Jīntiān tiānqì hěn rè.","vi":"Hôm nay thời tiết rất nóng.","words":["jīntiān","tiānqì","hěn","rè"]},{"cn":"我坐公交车去公司。","py":"Wǒ zuò gōngjiāochē qù gōngsī.","vi":"Tôi đi xe buýt đến công ty.","words":["wǒ","zuò","gōngjiāochē","qù","gōngsī"]},{"cn":"我开车回老家。","py":"Wǒ kāichē huí lǎojiā.","vi":"Tôi lái xe về quê.","words":["wǒ","kāichē","huí","lǎojiā"]},{"cn":"我坐地铁上班。","py":"Wǒ zuò dìtiě shàngbān.","vi":"Tôi đi tàu điện ngầm đi làm.","words":["wǒ","zuò","dìtiě","shàngbān"]},{"cn":"我不常坐出租车。","py":"Wǒ bù cháng zuò chūzūchē.","vi":"Tôi không thường đi taxi.","words":["wǒ","bù","cháng","zuò","chūzūchē"]},{"cn":"我想坐火车回老家。","py":"Wǒ xiǎng zuò huǒchē huí lǎojiā.","vi":"Tôi muốn đi tàu hỏa về quê.","words":["wǒ","xiǎng","zuò","huǒchē","huí","lǎojiā"]},{"cn":"我坐飞机去中国。","py":"Wǒ zuò fēijī qù Zhōngguó.","vi":"Tôi đi máy bay đến Trung Quốc.","words":["wǒ","zuò","fēijī","qù","zhōngguó"]}]},{"lesson":26,"title":"Bài 26","vocab":[{"cn":"爱好","py":"àihào","vi":"sở thích","ex":{"cn":"我的爱好是看电影。","py":"Wǒ de àihào shì kàn diànyǐng.","vi":"Sở thích của tôi là xem phim."}},{"cn":"游泳","py":"yóuyǒng","vi":"bơi","ex":{"cn":"我常常跟朋友去游泳。","py":"Wǒ chángcháng gēn péngyou qù yóuyǒng.","vi":"Tôi thường cùng bạn bè đi bơi."}},{"cn":"会","py":"huì","vi":"biết; có khả năng (đã học được)","ex":{"cn":"我会游泳。","py":"Wǒ huì yóuyǒng.","vi":"Tôi biết bơi."}},{"cn":"旱鸭子","py":"hànyāzi","vi":"người không biết bơi (nghĩa đen: vịt cạn)","ex":{"cn":"我是旱鸭子，不会游泳。","py":"Wǒ shì hànyāzi, bú huì yóuyǒng.","vi":"Tôi là “vịt cạn”, không biết bơi."}},{"cn":"运动","py":"yùndòng","vi":"vận động; thể thao","ex":{"cn":"我每天都在公园运动。","py":"Wǒ měitiān dōu zài gōngyuán yùndòng.","vi":"Mỗi ngày tôi đều vận động ở công viên."}},{"cn":"打","py":"dǎ","vi":"đánh; chơi (các môn bóng)","ex":{"cn":"我跟朋友打球。","py":"Wǒ gēn péngyou dǎ qiú.","vi":"Tôi chơi bóng cùng bạn."}},{"cn":"网球","py":"wǎngqiú","vi":"quần vợt (tennis)","ex":{"cn":"我不会打网球。","py":"Wǒ bú huì dǎ wǎngqiú.","vi":"Tôi không biết chơi quần vợt."}},{"cn":"羽毛球","py":"yǔmáoqiú","vi":"cầu lông","ex":{"cn":"我也会打羽毛球。","py":"Wǒ yě huì dǎ yǔmáoqiú.","vi":"Tôi cũng biết chơi cầu lông."}},{"cn":"排球","py":"páiqiú","vi":"bóng chuyền","ex":{"cn":"你会打排球吗？","py":"Nǐ huì dǎ páiqiú ma?","vi":"Bạn có biết chơi bóng chuyền không?"}},{"cn":"篮球","py":"lánqiú","vi":"bóng rổ","ex":{"cn":"我会打篮球。","py":"Wǒ huì dǎ lánqiú.","vi":"Tôi biết chơi bóng rổ."}},{"cn":"画","py":"huà","vi":"vẽ"},{"cn":"画儿","py":"huàr","vi":"bức tranh; tranh","ex":{"cn":"这张画儿很漂亮。","py":"Zhè zhāng huàr hěn piàoliang.","vi":"Bức tranh này rất đẹp."}},{"cn":"瑜伽","py":"yújiā","vi":"yoga","ex":{"cn":"我的爱好是练瑜伽。","py":"Wǒ de àihào shì liàn yújiā.","vi":"Sở thích của tôi là tập yoga."}},{"cn":"有时候","py":"yǒu shíhou","vi":"đôi khi; thỉnh thoảng","ex":{"cn":"我有时候去游泳。","py":"Wǒ yǒu shíhou qù yóuyǒng.","vi":"Thỉnh thoảng tôi đi bơi."}},{"cn":"练习","py":"liànxí","vi":"luyện tập","ex":{"cn":"我每天都练习汉语。","py":"Wǒ měitiān dōu liànxí Hànyǔ.","vi":"Mỗi ngày tôi đều luyện tập tiếng Trung."}}],"sentences":[{"cn":"我的爱好是看电影。","py":"Wǒ de àihào shì kàn diànyǐng.","vi":"Sở thích của tôi là xem phim.","words":["wǒ","de","àihào","shì","kàn","diànyǐng"]},{"cn":"我常常跟朋友去游泳。","py":"Wǒ chángcháng gēn péngyou qù yóuyǒng.","vi":"Tôi thường cùng bạn bè đi bơi.","words":["wǒ","chángcháng","gēn","péngyou","qù","yóuyǒng"]},{"cn":"我会游泳。","py":"Wǒ huì yóuyǒng.","vi":"Tôi biết bơi.","words":["wǒ","huì","yóuyǒng"]},{"cn":"我是旱鸭子，不会游泳。","py":"Wǒ shì hànyāzi, bú huì yóuyǒng.","vi":"Tôi là “vịt cạn”, không biết bơi.","words":["wǒ","shì","hànyāzi","bú","huì","yóuyǒng"]},{"cn":"我每天都在公园运动。","py":"Wǒ měitiān dōu zài gōngyuán yùndòng.","vi":"Mỗi ngày tôi đều vận động ở công viên.","words":["wǒ","měitiān","dōu","zài","gōngyuán","yùndòng"],"alts":[{"cn":"每天我都在公园运动。","words":["měitiān","wǒ","dōu","zài","gōngyuán","yùndòng"]}]},{"cn":"我跟朋友打球。","py":"Wǒ gēn péngyou dǎ qiú.","vi":"Tôi chơi bóng cùng bạn.","words":["wǒ","gēn","péngyou","dǎ","qiú"]},{"cn":"我不会打网球。","py":"Wǒ bú huì dǎ wǎngqiú.","vi":"Tôi không biết chơi quần vợt.","words":["wǒ","bú","huì","dǎ","wǎngqiú"]},{"cn":"我也会打羽毛球。","py":"Wǒ yě huì dǎ yǔmáoqiú.","vi":"Tôi cũng biết chơi cầu lông.","words":["wǒ","yě","huì","dǎ","yǔmáoqiú"]},{"cn":"你会打排球吗？","py":"Nǐ huì dǎ páiqiú ma?","vi":"Bạn có biết chơi bóng chuyền không?","words":["nǐ","huì","dǎ","páiqiú","ma"]},{"cn":"我会打篮球。","py":"Wǒ huì dǎ lánqiú.","vi":"Tôi biết chơi bóng rổ.","words":["wǒ","huì","dǎ","lánqiú"]},{"cn":"这张画儿很漂亮。","py":"Zhè zhāng huàr hěn piàoliang.","vi":"Bức tranh này rất đẹp.","words":["zhè","zhāng","huàr","hěn","piàoliang"]},{"cn":"我的爱好是练瑜伽。","py":"Wǒ de àihào shì liàn yújiā.","vi":"Sở thích của tôi là tập yoga.","words":["wǒ","de","àihào","shì","liàn","yújiā"]},{"cn":"我有时候去游泳。","py":"Wǒ yǒu shíhou qù yóuyǒng.","vi":"Thỉnh thoảng tôi đi bơi.","words":["wǒ","yǒu","shíhou","qù","yóuyǒng"]},{"cn":"我每天都练习汉语。","py":"Wǒ měitiān dōu liànxí Hànyǔ.","vi":"Mỗi ngày tôi đều luyện tập tiếng Trung.","words":["wǒ","měitiān","dōu","liànxí","hànyǔ"],"alts":[{"cn":"每天我都练习汉语。","words":["měitiān","wǒ","dōu","liànxí","hànyǔ"]}]}]},{"lesson":27,"title":"Bài 27","vocab":[{"cn":"进","py":"jìn","vi":"vào","ex":{"cn":"请进！","py":"Qǐng jìn!","vi":"Mời vào!"}},{"cn":"特长","py":"tècháng","vi":"sở trường","ex":{"cn":"你的特长是什么？","py":"Nǐ de tècháng shì shénme?","vi":"Sở trường của bạn là gì?"}},{"cn":"说","py":"shuō","vi":"nói","ex":{"cn":"我会说汉语和英语。","py":"Wǒ huì shuō Hànyǔ hé Yīngyǔ.","vi":"Tôi có thể nói tiếng Trung và tiếng Anh."}},{"cn":"语言","py":"yǔyán","vi":"ngôn ngữ","ex":{"cn":"你会说几种语言？","py":"Nǐ huì shuō jǐ zhǒng yǔyán?","vi":"Bạn biết nói mấy ngôn ngữ?"}},{"cn":"唱","py":"chàng","vi":"hát","ex":{"cn":"她唱得很好。","py":"Tā chàng de hěn hǎo.","vi":"Cô ấy hát rất hay."}},{"cn":"中文","py":"Zhōngwén","vi":"tiếng Trung (chữ Hán; ngôn ngữ)","ex":{"cn":"我的中文不太好。","py":"Wǒ de Zhōngwén bú tài hǎo.","vi":"Tiếng Trung của tôi không giỏi lắm."}},{"cn":"歌","py":"gē","vi":"bài hát","ex":{"cn":"你会唱中文歌吗？","py":"Nǐ huì chàng Zhōngwén gē ma?","vi":"Bạn biết hát bài hát tiếng Trung không?"}},{"cn":"不过","py":"búguò","vi":"nhưng; tuy nhiên","ex":{"cn":"我会做饭，不过做得不好吃。","py":"Wǒ huì zuòfàn, búguò zuò de bù hǎochī.","vi":"Tôi biết nấu ăn, nhưng nấu không ngon."}},{"cn":"功夫","py":"gōngfu","vi":"công phu; võ thuật","ex":{"cn":"我想学中国功夫。","py":"Wǒ xiǎng xué Zhōngguó gōngfu.","vi":"Tôi muốn học võ Trung Quốc."}}],"sentences":[{"cn":"请进！","py":"Qǐng jìn!","vi":"Mời vào!","words":["qǐng","jìn"]},{"cn":"你的特长是什么？","py":"Nǐ de tècháng shì shénme?","vi":"Sở trường của bạn là gì?","words":["nǐ","de","tècháng","shì","shénme"]},{"cn":"我会说汉语和英语。","py":"Wǒ huì shuō Hànyǔ hé Yīngyǔ.","vi":"Tôi có thể nói tiếng Trung và tiếng Anh.","words":["wǒ","huì","shuō","hànyǔ","hé","yīngyǔ"]},{"cn":"你会说几种语言？","py":"Nǐ huì shuō jǐ zhǒng yǔyán?","vi":"Bạn biết nói mấy ngôn ngữ?","words":["nǐ","huì","shuō","jǐ","zhǒng","yǔyán"]},{"cn":"她唱得很好。","py":"Tā chàng de hěn hǎo.","vi":"Cô ấy hát rất hay.","words":["tā","chàng","de","hěn","hǎo"]},{"cn":"我的中文不太好。","py":"Wǒ de Zhōngwén bú tài hǎo.","vi":"Tiếng Trung của tôi không giỏi lắm.","words":["wǒ","de","zhōngwén","bú","tài","hǎo"]},{"cn":"你会唱中文歌吗？","py":"Nǐ huì chàng Zhōngwén gē ma?","vi":"Bạn biết hát bài hát tiếng Trung không?","words":["nǐ","huì","chàng","zhōngwén","gē","ma"]},{"cn":"我会做饭，不过做得不好吃。","py":"Wǒ huì zuòfàn, búguò zuò de bù hǎochī.","vi":"Tôi biết nấu ăn, nhưng nấu không ngon.","words":["wǒ","huì","zuòfàn","búguò","zuò","de","bù","hǎochī"]},{"cn":"我想学中国功夫。","py":"Wǒ xiǎng xué Zhōngguó gōngfu.","vi":"Tôi muốn học võ Trung Quốc.","words":["wǒ","xiǎng","xué","zhōngguó","gōngfu"]}]},{"lesson":28,"title":"Bài 28","vocab":[{"cn":"球","py":"qiú","vi":"bóng; môn bóng","ex":{"cn":"他喜欢打球。","py":"Tā xǐhuan dǎ qiú.","vi":"Anh ấy thích chơi bóng."}},{"cn":"打算","py":"dǎsuàn","vi":"dự định","ex":{"cn":"我打算明天去中国。","py":"Wǒ dǎsuàn míngtiān qù Zhōngguó.","vi":"Tôi dự định ngày mai đi Trung Quốc."}},{"cn":"跑步","py":"pǎobù","vi":"chạy bộ","ex":{"cn":"你喜欢跑步吗？","py":"Nǐ xǐhuan pǎobù ma?","vi":"Bạn thích chạy bộ không?"}},{"cn":"正在","py":"zhèngzài","vi":"đang (hành động đang diễn ra)","ex":{"cn":"他正在看电视。","py":"Tā zhèngzài kàn diànshì.","vi":"Anh ấy đang xem ti vi."}},{"cn":"散步","py":"sànbù","vi":"đi dạo; tản bộ","ex":{"cn":"晚上我喜欢散步。","py":"Wǎnshang wǒ xǐhuan sànbù.","vi":"Buổi tối tôi thích đi dạo."}},{"cn":"干嘛","py":"gànmá","vi":"làm gì (khẩu ngữ)","ex":{"cn":"你在干嘛？","py":"Nǐ zài gànmá?","vi":"Bạn đang làm gì thế?"}},{"cn":"不见不散","py":"bú jiàn bú sàn","vi":"không gặp không về (hẹn nhất định gặp)","ex":{"cn":"明天七点半我们去看电影，不见不散！","py":"Míngtiān qī diǎn bàn wǒmen qù kàn diànyǐng, bú jiàn bú sàn!","vi":"Ngày mai 7:30 chúng ta đi xem phim nhé, không gặp không về."}},{"cn":"踢","py":"tī","vi":"đá"},{"cn":"踢足球","py":"tī zúqiú","vi":"đá bóng","ex":{"cn":"我不会踢足球。","py":"Wǒ bú huì tī zúqiú.","vi":"Tôi không biết đá bóng."}}],"sentences":[{"cn":"他喜欢打球。","py":"Tā xǐhuan dǎ qiú.","vi":"Anh ấy thích chơi bóng.","words":["tā","xǐhuan","dǎ","qiú"]},{"cn":"我打算明天去中国。","py":"Wǒ dǎsuàn míngtiān qù Zhōngguó.","vi":"Tôi dự định ngày mai đi Trung Quốc.","words":["wǒ","dǎsuàn","míngtiān","qù","zhōngguó"]},{"cn":"你喜欢跑步吗？","py":"Nǐ xǐhuan pǎobù ma?","vi":"Bạn thích chạy bộ không?","words":["nǐ","xǐhuan","pǎobù","ma"]},{"cn":"他正在看电视。","py":"Tā zhèngzài kàn diànshì.","vi":"Anh ấy đang xem ti vi.","words":["tā","zhèngzài","kàn","diànshì"]},{"cn":"晚上我喜欢散步。","py":"Wǎnshang wǒ xǐhuan sànbù.","vi":"Buổi tối tôi thích đi dạo.","words":["wǎnshang","wǒ","xǐhuan","sànbù"],"alts":[{"cn":"我晚上喜欢散步。","words":["wǒ","wǎnshang","xǐhuan","sànbù"]}]},{"cn":"你在干嘛？","py":"Nǐ zài gànmá?","vi":"Bạn đang làm gì thế?","words":["nǐ","zài","gànmá"]},{"cn":"明天七点半我们去看电影，不见不散！","py":"Míngtiān qī diǎn bàn wǒmen qù kàn diànyǐng, bú jiàn bú sàn!","vi":"Ngày mai 7:30 chúng ta đi xem phim nhé, không gặp không về.","words":["míngtiān","qī","diǎn","bàn","wǒmen","qù","kàn","diànyǐng","bú","jiàn","bú","sàn"]},{"cn":"我不会踢足球。","py":"Wǒ bú huì tī zúqiú.","vi":"Tôi không biết đá bóng.","words":["wǒ","bú","huì","tī","zúqiú"]}]},{"lesson":29,"title":"Bài 29","vocab":[{"cn":"面试","py":"miànshì","vi":"phỏng vấn","ex":{"cn":"明天我要去面试。","py":"Míngtiān wǒ yào qù miànshì.","vi":"Ngày mai tôi phải đi phỏng vấn."}},{"cn":"结果","py":"jiéguǒ","vi":"kết quả","ex":{"cn":"面试结果怎么样？","py":"Miànshì jiéguǒ zěnmeyàng?","vi":"Kết quả phỏng vấn như thế nào?"}},{"cn":"一定","py":"yídìng","vi":"nhất định; chắc chắn","ex":{"cn":"明天我一定来。","py":"Míngtiān wǒ yídìng lái.","vi":"Ngày mai tôi nhất định đến."}},{"cn":"那么","py":"nàme","vi":"như vậy; đến thế","ex":{"cn":"他那么聪明！","py":"Tā nàme cōngming!","vi":"Anh ấy thông minh đến vậy!"}},{"cn":"聪明","py":"cōngming","vi":"thông minh","ex":{"cn":"她很聪明。","py":"Tā hěn cōngming.","vi":"Cô ấy rất thông minh."}},{"cn":"流利","py":"liúlì","vi":"lưu loát; trôi chảy","ex":{"cn":"他说汉语说得很流利。","py":"Tā shuō Hànyǔ shuō de hěn liúlì.","vi":"Anh ấy nói tiếng Trung rất lưu loát."}},{"cn":"逛街","py":"guàngjiē","vi":"đi dạo phố; đi mua sắm","ex":{"cn":"周末我跟朋友去逛街。","py":"Zhōumò wǒ gēn péngyou qù guàngjiē.","vi":"Cuối tuần tôi cùng bạn đi dạo phố."}},{"cn":"得","py":"děi","vi":"phải; cần phải (khi đọc de: trợ từ bổ ngữ, vd 唱得好)","ex":{"cn":"明天我得上班。","py":"Míngtiān wǒ děi shàngbān.","vi":"Ngày mai tôi phải đi làm."}},{"cn":"送","py":"sòng","vi":"đưa; tiễn","ex":{"cn":"我送你回家。","py":"Wǒ sòng nǐ huí jiā.","vi":"Tôi đưa bạn về nhà."}},{"cn":"机场","py":"jīchǎng","vi":"sân bay","ex":{"cn":"我要去机场送朋友。","py":"Wǒ yào qù jīchǎng sòng péngyou.","vi":"Tôi phải ra sân bay tiễn bạn."}}],"sentences":[{"cn":"明天我要去面试。","py":"Míngtiān wǒ yào qù miànshì.","vi":"Ngày mai tôi phải đi phỏng vấn.","words":["míngtiān","wǒ","yào","qù","miànshì"],"alts":[{"cn":"我明天要去面试。","words":["wǒ","míngtiān","yào","qù","miànshì"]}]},{"cn":"面试结果怎么样？","py":"Miànshì jiéguǒ zěnmeyàng?","vi":"Kết quả phỏng vấn như thế nào?","words":["miànshì","jiéguǒ","zěnmeyàng"]},{"cn":"明天我一定来。","py":"Míngtiān wǒ yídìng lái.","vi":"Ngày mai tôi nhất định đến.","words":["míngtiān","wǒ","yídìng","lái"],"alts":[{"cn":"我明天一定来。","words":["wǒ","míngtiān","yídìng","lái"]}]},{"cn":"他那么聪明！","py":"Tā nàme cōngming!","vi":"Anh ấy thông minh đến vậy!","words":["tā","nàme","cōngming"]},{"cn":"她很聪明。","py":"Tā hěn cōngming.","vi":"Cô ấy rất thông minh.","words":["tā","hěn","cōngming"]},{"cn":"他说汉语说得很流利。","py":"Tā shuō Hànyǔ shuō de hěn liúlì.","vi":"Anh ấy nói tiếng Trung rất lưu loát.","words":["tā","shuō","hànyǔ","shuō","de","hěn","liúlì"]},{"cn":"周末我跟朋友去逛街。","py":"Zhōumò wǒ gēn péngyou qù guàngjiē.","vi":"Cuối tuần tôi cùng bạn đi dạo phố.","words":["zhōumò","wǒ","gēn","péngyou","qù","guàngjiē"],"alts":[{"cn":"我周末跟朋友去逛街。","words":["wǒ","zhōumò","gēn","péngyou","qù","guàngjiē"]}]},{"cn":"明天我得上班。","py":"Míngtiān wǒ děi shàngbān.","vi":"Ngày mai tôi phải đi làm.","words":["míngtiān","wǒ","děi","shàngbān"],"alts":[{"cn":"我明天得上班。","words":["wǒ","míngtiān","děi","shàngbān"]}]},{"cn":"我送你回家。","py":"Wǒ sòng nǐ huí jiā.","vi":"Tôi đưa bạn về nhà.","words":["wǒ","sòng","nǐ","huí","jiā"]},{"cn":"我要去机场送朋友。","py":"Wǒ yào qù jīchǎng sòng péngyou.","vi":"Tôi phải ra sân bay tiễn bạn.","words":["wǒ","yào","qù","jīchǎng","sòng","péngyou"]}]},{"lesson":30,"title":"Bài 30","vocab":[{"cn":"周末","py":"zhōumò","vi":"cuối tuần","ex":{"cn":"周末你做什么？","py":"Zhōumò nǐ zuò shénme?","vi":"Cuối tuần bạn làm gì?"}},{"cn":"郊区","py":"jiāoqū","vi":"ngoại ô; vùng ven","ex":{"cn":"周末我常常在郊区跑步。","py":"Zhōumò wǒ chángcháng zài jiāoqū pǎobù.","vi":"Cuối tuần tôi thường chạy bộ ở ngoại ô."}},{"cn":"滑雪","py":"huáxuě","vi":"trượt tuyết","ex":{"cn":"你会滑雪吗？","py":"Nǐ huì huáxuě ma?","vi":"Bạn có biết trượt tuyết không?"}},{"cn":"滑雪场","py":"huáxuěchǎng","vi":"sân trượt tuyết; khu trượt tuyết","ex":{"cn":"这个滑雪场很大。","py":"Zhège huáxuěchǎng hěn dà.","vi":"Khu trượt tuyết này rất lớn."}},{"cn":"棒","py":"bàng","vi":"giỏi; tuyệt","ex":{"cn":"你真棒！","py":"Nǐ zhēn bàng!","vi":"Bạn thật là giỏi!"}},{"cn":"难","py":"nán","vi":"khó","ex":{"cn":"我觉得汉语很难。","py":"Wǒ juéde Hànyǔ hěn nán.","vi":"Tôi cảm thấy tiếng Trung rất khó."}},{"cn":"好玩儿","py":"hǎowánr","vi":"vui; thú vị","ex":{"cn":"滑雪很好玩儿。","py":"Huáxuě hěn hǎowánr.","vi":"Trượt tuyết rất vui."}},{"cn":"书店","py":"shūdiàn","vi":"hiệu sách; nhà sách","ex":{"cn":"我常常去书店买书。","py":"Wǒ chángcháng qù shūdiàn mǎi shū.","vi":"Tôi thường đi hiệu sách mua sách."}},{"cn":"东西","py":"dōngxi","vi":"đồ; đồ vật","ex":{"cn":"我常常跟女儿去超市买东西。","py":"Wǒ chángcháng gēn nǚ'ér qù chāoshì mǎi dōngxi.","vi":"Tôi thường cùng con gái đi siêu thị mua đồ."}}],"sentences":[{"cn":"周末你做什么？","py":"Zhōumò nǐ zuò shénme?","vi":"Cuối tuần bạn làm gì?","words":["zhōumò","nǐ","zuò","shénme"],"alts":[{"cn":"你周末做什么？","words":["nǐ","zhōumò","zuò","shénme"]}]},{"cn":"周末我常常在郊区跑步。","py":"Zhōumò wǒ chángcháng zài jiāoqū pǎobù.","vi":"Cuối tuần tôi thường chạy bộ ở ngoại ô.","words":["zhōumò","wǒ","chángcháng","zài","jiāoqū","pǎobù"],"alts":[{"cn":"我周末常常在郊区跑步。","words":["wǒ","zhōumò","chángcháng","zài","jiāoqū","pǎobù"]}]},{"cn":"你会滑雪吗？","py":"Nǐ huì huáxuě ma?","vi":"Bạn có biết trượt tuyết không?","words":["nǐ","huì","huáxuě","ma"]},{"cn":"这个滑雪场很大。","py":"Zhège huáxuěchǎng hěn dà.","vi":"Khu trượt tuyết này rất lớn.","words":["zhège","huáxuěchǎng","hěn","dà"]},{"cn":"你真棒！","py":"Nǐ zhēn bàng!","vi":"Bạn thật là giỏi!","words":["nǐ","zhēn","bàng"]},{"cn":"我觉得汉语很难。","py":"Wǒ juéde Hànyǔ hěn nán.","vi":"Tôi cảm thấy tiếng Trung rất khó.","words":["wǒ","juéde","hànyǔ","hěn","nán"]},{"cn":"滑雪很好玩儿。","py":"Huáxuě hěn hǎowánr.","vi":"Trượt tuyết rất vui.","words":["huáxuě","hěn","hǎowánr"]},{"cn":"我常常去书店买书。","py":"Wǒ chángcháng qù shūdiàn mǎi shū.","vi":"Tôi thường đi hiệu sách mua sách.","words":["wǒ","chángcháng","qù","shūdiàn","mǎi","shū"]},{"cn":"我常常跟女儿去超市买东西。","py":"Wǒ chángcháng gēn nǚ'ér qù chāoshì mǎi dōngxi.","vi":"Tôi thường cùng con gái đi siêu thị mua đồ.","words":["wǒ","chángcháng","gēn","nǚér","qù","chāoshì","mǎi","dōngxi"]}]}];
 </script>
+  <script>
+    // ---------- Pool câu chào (giữ nguyên nội dung) ----------
+    const WELCOME = [
+      { cn:"👋 欢迎回来！今天也要进步一点点哦～", vi:"Chào mừng bạn quay lại! Hôm nay cũng tiến bộ một chút nhé～" },
+      { cn:"🌿 欢迎回来！一点一点，慢慢变熟悉。", vi:"Chào mừng bạn quay lại! Từng chút một, từ từ trở nên quen thuộc." },
+      { cn:"🌸 欢迎回来！很高兴又见到你。", vi:"Chào mừng bạn quay lại! Rất vui lại được gặp bạn." },
+      { cn:"🌱 欢迎回来！有时间的时候，回来看看吧。", vi:"Chào mừng bạn quay lại! Khi có thời gian, hãy ghé qua ôn một chút nhé." },
+      { cn:"👋 你好！欢迎来到你的中文复习小站。", vi:"Xin chào! Chào mừng bạn đến với góc ôn tập tiếng Trung của mình." },
+      { cn:"🍀 你的中文小天地，欢迎回来！", vi:"Góc nhỏ tiếng Trung của bạn, chào mừng bạn quay lại!" },
+      { cn:"📖 今天学什么？让我们开始吧！", vi:"Hôm nay học gì đây? Cùng bắt đầu nhé!" },
+      { cn:"🌱 今日任务：让中文再靠近你一点！", vi:"Nhiệm vụ hôm nay: để tiếng Trung tiến gần bạn thêm một chút!" },
+      { cn:"☀️ 今天也来打卡吧！", vi:"Hôm nay cũng ghé qua ôn một chút nhé!" }
+    ];
+    // ---------- 29 câu động viên (giữ nguyên nội dung) ----------
+    const QUOTES = [
+      { cn:"🌷 做得很好，今天也有一点收获。", vi:"Làm tốt lắm, hôm nay lại có thêm một chút thu hoạch rồi." },
+      { cn:"🌱 一点一点积累，你会越来越好的！", vi:"Từng chút từng chút tích lũy, bạn sẽ ngày càng tốt hơn!" },
+      { cn:"✨ 今天的努力，都不会白费。", vi:"Những nỗ lực hôm nay sẽ không uổng phí đâu." },
+      { cn:"🌿 慢慢来，你已经做得很好了！", vi:"Cứ từ từ thôi, bạn đã làm rất tốt rồi!" },
+      { cn:"📖 每一次复习，都是在为进步积累力量。", vi:"Mỗi lần ôn tập đều là một lần tích lũy cho sự tiến bộ." },
+      { cn:"🍀 坚持自己的节奏，慢慢进步就好。", vi:"Cứ giữ nhịp độ của riêng mình, từ từ tiến bộ là được." },
+      { cn:"🌸 今天也完成了一点点，继续加油！", vi:"Hôm nay lại hoàn thành thêm một chút rồi, tiếp tục cố lên nhé!" },
+      { cn:"🪴 别着急，慢慢学，你会越来越熟悉的。", vi:"Đừng vội, cứ từ từ học, bạn sẽ ngày càng quen thuộc hơn." },
+      { cn:"🌙 今天就到这里，辛苦了！", vi:"Hôm nay đến đây thôi, bạn đã vất vả rồi!" },
+      { cn:"💌 感谢今天的几分钟，我们下次再见！", vi:"Cảm ơn bạn vì vài phút hôm nay, hẹn gặp lại lần sau!" },
+      { cn:"☕ 今天辛苦了，有空再回来看看吧。", vi:"Hôm nay vất vả rồi, khi có thời gian lại ghé qua nhé." },
+      { cn:"🌱 记住一点，也是一种进步。", vi:"Nhớ thêm được một chút cũng là một sự tiến bộ." },
+      { cn:"👏 今天的复习完成啦，给自己一点掌声吧！", vi:"Phần ôn tập hôm nay hoàn thành rồi, hãy tự dành cho mình một tràng pháo tay nhé!" },
+      { cn:"🌸 今天先到这里，期待下次再见。", vi:"Hôm nay tạm dừng ở đây, hẹn gặp bạn lần sau." },
+      { cn:"☀️ 谢谢你的认真，祝你今天一切顺利！", vi:"Cảm ơn sự nghiêm túc của bạn, chúc bạn hôm nay mọi việc thuận lợi!" },
+      { cn:"🌿 不求一次记住，慢慢熟悉就好。", vi:"Không cần nhớ ngay một lần, từ từ quen thuộc là được." },
+      { cn:"🌷 不用每次都学很多，学一点就很好。", vi:"Không cần lần nào cũng học thật nhiều, học một chút cũng rất tốt." },
+      { cn:"✨ 每复习一次，中文就离你更近一点。", vi:"Mỗi lần ôn tập, tiếng Trung lại gần bạn thêm một chút." },
+      { cn:"🍃 今天记住的一个词，也是今天的收获。", vi:"Nhớ được một từ hôm nay cũng là một thu hoạch của hôm nay." },
+      { cn:"🌱 今天多认识一点，明天就少陌生一点。", vi:"Hôm nay biết thêm một chút, ngày mai sẽ bớt xa lạ một chút." },
+      { cn:"🌙 今天的复习，会在以后的某一天帮到你。", vi:"Buổi ôn hôm nay sẽ giúp bạn vào một ngày nào đó sau này." },
+      { cn:"🌼 现在觉得陌生的词，以后会慢慢变熟悉。", vi:"Những từ bây giờ còn thấy xa lạ rồi sẽ dần trở nên quen thuộc." },
+      { cn:"🪴 慢慢学，慢慢记，慢慢成为更好的自己。", vi:"Từ từ học, từ từ ghi nhớ, từ từ trở thành phiên bản tốt hơn của chính mình." },
+      { cn:"🌸 小小的坚持，也会带来大大的改变。", vi:"Những kiên trì nhỏ bé cũng có thể mang đến thay đổi lớn." },
+      { cn:"☀️ 今天的每一点积累，都会成为明天的底气。", vi:"Mỗi chút tích lũy hôm nay sẽ trở thành sự tự tin của ngày mai." },
+      { cn:"🐢 不急着走得快，慢慢走得远。", vi:"Không cần vội đi thật nhanh, cứ từ từ đi thật xa." },
+      { cn:"📚 一个词，一个句子，慢慢就会越来越多。", vi:"Một từ, một câu, từ từ rồi sẽ ngày càng nhiều hơn." },
+      { cn:"🌿 学过的内容，再见一次就会更熟悉。", vi:"Những điều đã học, gặp lại một lần sẽ càng quen thuộc hơn." },
+      { cn:"💛 今天花的这些时间，都很值得。", vi:"Khoảng thời gian bạn dành hôm nay đều rất đáng giá." }
+    ];
 
+    // ---------- Tiện ích ----------
+    const $ = id => document.getElementById(id);
+    const SKEY = 'hsk1_session_v2', QKEY = 'hsk1_seen_quotes_v2', WKEY = 'hsk1_seen_welcome';
+    const LS = {
+      get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+      set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+      del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+    };
+    const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const LBY = {}; LESSON_DATA.forEach(l => LBY[l.lesson] = l);
+    const NUMS = LESSON_DATA.map(l => l.lesson);
+    const ALLV = LESSON_DATA.flatMap(l => l.vocab).filter(v => v.vi);
+    const norm = s => String(s).toLowerCase().replace(/[\s\p{P}\p{S}]/gu, '');
+    const pyNorm = s => norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const stripParen = s => s.replace(/[（(][^）)]*[）)]/g, '');
+    // Chọn ngẫu nhiên, chưa dùng gần đây; chỉ reset pool khi đã dùng hết (giữ lại câu vừa dùng để không lặp liền kề)
+    function pickUnseen(arr, key) {
+      let seen = LS.get(key, []).filter(i => i < arr.length);
+      if (seen.length >= arr.length) seen = [seen[seen.length - 1]];
+      const av = arr.map((_, i) => i).filter(i => !seen.includes(i));
+      const i = av[Math.random() * av.length | 0];
+      seen.push(i); LS.set(key, seen);
+      return arr[i];
+    }
+
+    const MODES = [
+      ['vocab', '📖', 'bg-teal-100 text-teal-700', '复习词汇', 'Ôn từ vựng'],
+      ['arrange', '🧩', 'bg-emerald-100 text-emerald-700', '连词成句', 'Sắp xếp câu'],
+      ['typing', '⌨️', 'bg-indigo-100 text-indigo-700', '打字练习', 'Luyện gõ'],
+      ['mixed', '🔀', 'bg-amber-100 text-amber-700', '综合练习', 'Luyện tập tổng hợp']
+    ];
+    // Ôn từ vựng gồm 4 dạng (k): vc = nghĩa→chữ Trung, cv = chữ Trung→nghĩa, lc = nghe→chọn từ, lv = nghe→chọn nghĩa
+    const KIND_TITLE = {
+      vc: '看义选词 · Nhìn nghĩa chọn từ',
+      cv: '看词选义 · Nhìn từ chọn nghĩa',
+      lc: '听音选词 · Nghe chọn từ',
+      lv: '听音选义 · Nghe chọn nghĩa'
+    };
+    const TYPE_TITLE = { a: '连词成句 · Sắp xếp câu', t: '打字练习 · Luyện gõ' };
+    const titleOf = r => r.t === 'v' ? KIND_TITLE[r.k || 'cv'] : TYPE_TITLE[r.t];
+
+    const S = { mode: null, scope: null, lesson: null, multi: [], qs: [], idx: 0, score: 0, ans: 0, aw: 0, as: 0, wrong: [], done: [], review: false, active: false, tries: 0, sel: null };
+
+    // ---------- Đọc tiếng Trung (Web Speech API, ưu tiên zh-CN) ----------
+    const HAS_TTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+    let ZH_VOICE = null;
+    function pickVoice() {
+      if (!HAS_TTS) return;
+      const vs = speechSynthesis.getVoices();
+      ZH_VOICE = vs.find(v => /^zh[-_]CN/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
+    }
+    if (HAS_TTS) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {} }
+    const ttsText = s => stripParen(s).replace(/…+/g, '，').replace(/[，。？！、\s]+$/, '');
+    function speakZh(txt, rate) {
+      if (!HAS_TTS || !txt) return;
+      try {
+        speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(txt);
+        m.lang = 'zh-CN'; if (ZH_VOICE) m.voice = ZH_VOICE; m.rate = rate || .85;
+        speechSynthesis.speak(m);
+      } catch (e) {}
+    }
+
+    // ---------- Âm thanh hiệu ứng (tạo bằng Web Audio, không cần file) ----------
+    let AC = null, SOUND = LS.get('hsk1_sound', true);
+    function ac() {
+      if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+      if (AC && AC.state === 'suspended') AC.resume();
+      return AC;
+    }
+    function tone(f, t0, d, type, v, f2) {
+      const a = ac(); if (!a || !SOUND) return;
+      const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+      o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v || .15, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .05);
+    }
+    function noise(t0, d, type, freq, v, f2) {
+      const a = ac(); if (!a || !SOUND) return;
+      const n = Math.max(1, a.sampleRate * d | 0), b = a.createBuffer(1, n, a.sampleRate), x = b.getChannelData(0);
+      for (let i = 0; i < n; i++) x[i] = Math.random() * 2 - 1;
+      const src = a.createBufferSource(); src.buffer = b;
+      const f = a.createBiquadFilter(), g = a.createGain(), t = a.currentTime + t0;
+      f.type = type; f.frequency.setValueAtTime(freq, t); if (f2) f.frequency.exponentialRampToValueAtTime(f2, t + d);
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      src.connect(f); f.connect(g); g.connect(a.destination); src.start(t);
+    }
+    const SFX = {
+      pop() { noise(0, .07, 'bandpass', 1400, .35); tone(320, 0, .09, 'square', .05, 120); },
+      ok() { [659, 784, 1047].forEach((f, i) => tone(f, i * .09, .38, 'sine', .17)); },
+      tap() { tone(880, 0, .07, 'sine', .15); tone(1320, .03, .13, 'sine', .1); },
+      hover() { tone(1568, 0, .09, 'sine', .05); tone(2093, .045, .1, 'sine', .035); },
+      unroll() {
+        const a = ac(); if (!a || !SOUND) return;
+        const n = a.sampleRate * 1.5 | 0, b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+        const src = a.createBufferSource(); src.buffer = b;
+        const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2;
+        const g = a.createGain(), t = a.currentTime + .25;
+        f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(2600, t + 1.25);
+        g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.08, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 1.4);
+        src.connect(f); f.connect(g); g.connect(a.destination); src.start(t);
+        tone(1047, 1.8, .7, 'sine', .07); tone(1568, 1.95, .8, 'sine', .05);
+      },
+      bad() { tone(330, 0, .2, 'triangle', .2); tone(247, .17, .34, 'triangle', .2); },
+      shake() { for (let i = 0; i < 7; i++) tone(170 + (i % 2) * 70, i * .07, .07, 'square', .045); },
+      open() { tone(260, 0, .45, 'sawtooth', .05, 1400); [784, 988, 1175, 1568, 1976].forEach((f, i) => { tone(f, .3 + i * .09, .5, 'sine', .13); tone(f * 2, .3 + i * .09, .3, 'triangle', .035); }); },
+      // "ting" rất nhẹ khi mở hộp quà
+      ting() { tone(2093, .05, 1.2, 'sine', .035); tone(3136, .05, .7, 'sine', .012); }
+    };
+    function toggleSound() { SOUND = !SOUND; LS.set('hsk1_sound', SOUND); soundIcon(); if (SOUND) SFX.ok(); }
+    function soundIcon() { $('soundIcon').className = 'fa-solid text-sm ' + (SOUND ? 'fa-volume-high' : 'fa-volume-xmark'); }
+    document.addEventListener('click', () => ac(), { once: true });
+
+    // ---------- Điều hướng 3 slide ----------
+    let curSlide = 0;
+    function showSlide(n) {
+      [1, 2, 3].forEach(i => $('slide' + i).classList.toggle('hidden', i !== n));
+      if (curSlide !== n) window.scrollTo({ top: 0 });
+      curSlide = n;
+    }
+    // Chỉ chạy hiệu ứng mở ruy-băng khi vừa mở link; quay về trang chủ thì hiện sẵn
+    function tryUnroll() {
+      if (!SOUND) return; const a = ac(); if (!a) return; const t0 = Date.now();
+      const go = () => { if (a.state === 'running' && Date.now() - t0 < 1500) SFX.unroll(); };
+      a.state === 'running' ? go() : a.resume().then(go).catch(() => {});
+    }
+    let curWelcome = null;
+    function showWelcome(animate) {
+      if (animate || !curWelcome) curWelcome = pickUnseen(WELCOME, WKEY);
+      const w = curWelcome;
+      $('wCn').textContent = w.cn; $('wVi').textContent = w.vi;
+      const rw = $('ribbonWrap'); rw.classList.remove('pre', 'opening');
+      if (animate) { void rw.offsetWidth; rw.classList.add('opening'); tryUnroll(); }
+      refreshResume();
+    }
+    function goHome() { if (HAS_TTS) speechSynthesis.cancel(); save(); showSlide(1); showWelcome(); }
+    function goStudy() { showSlide(2); renderAll(); if (!S.active) renderIdle(); }
+    function goGift() { S.active = false; showSlide(3); buildGifts(); }
+
+    // ---------- Lưu / tiếp tục ----------
+    function save() {
+      if (!S.qs.length) return;
+      LS.set(SKEY, { mode: S.mode, scope: S.scope, lesson: S.lesson, multi: S.multi, qs: S.qs, idx: S.idx, score: S.score, ans: S.ans, aw: S.aw, as: S.as, wrong: S.wrong, done: S.done, review: S.review });
+    }
+    function clearSaved() { LS.del(SKEY); refreshResume(); }
+    function refreshResume() {
+      const d = LS.get(SKEY, null), card = $('homeResumeCard');
+      if (!d || !d.qs || !d.qs.length) { card.classList.add('hidden'); return; }
+      const q = d.qs[Math.min(d.idx, d.qs.length - 1)];
+      $('resumeCardText').textContent = d.idx >= d.qs.length
+        ? `Bạn vừa hoàn thành một phần · Bài ${q.l} · 已复习 Đã ôn: ${d.ans}`
+        : `Bạn đang dừng ở: Bài ${q.l} · Câu ${d.idx + 1}`;
+      card.classList.remove('hidden');
+    }
+    function resumeSaved() {
+      const d = LS.get(SKEY, null);
+      if (!d || !d.qs || !d.qs.length) return;
+      Object.assign(S, d, { active: true });
+      showSlide(2); renderAll();
+      S.idx >= S.qs.length ? finishQs() : showExercise();
+    }
+    window.addEventListener('pagehide', () => { if (S.active) save(); });
+
+    // ---------- Chọn chế độ + phạm vi (cùng một trang) ----------
+    function renderAll() { renderModes(); renderScopes(); renderChips(); }
+    function renderModes() {
+      $('modes').innerHTML = MODES.map(([k, ic, cl, cn, vi]) => {
+        const on = S.mode === k;
+        return `<div onclick="pickMode('${k}')" class="lift glass-card relative p-4 md:p-5 rounded-2xl cursor-pointer border-2 ${on ? 'border-teal-500 bg-teal-50/60 shadow-md' : 'border-transparent'}">
+          ${on ? '<span class="absolute top-2 right-2 w-5 h-5 rounded-full bg-teal-600 text-white text-[10px] flex items-center justify-center"><i class="fa-solid fa-check"></i></span>' : ''}
+          <div class="w-12 h-12 rounded-2xl ${cl} flex items-center justify-center text-2xl mb-3">${ic}</div>
+          <h4 class="font-bold text-slate-800 text-base">${cn}<span class="block text-sm font-medium text-slate-500">${vi}</span></h4></div>`;
+      }).join('');
+    }
+    function renderScopes() {
+      const def = [['single', '📖', '单课练习', 'Luyện tập theo bài'], ['multi', '📚', '多课复习', 'Ôn nhiều bài'], ['all', '🌏', '全部复习', 'Ôn tập tất cả']];
+      $('scopes').innerHTML = def.map(([k, ic, cn, vi]) => {
+        const on = S.scope === k;
+        return `<button onclick="pickScope('${k}')" class="lift px-4 py-4 rounded-xl ${on ? 'border-2 border-teal-600 bg-teal-50 text-teal-800 shadow-sm' : 'border-2 border-slate-200 bg-white text-slate-700'} font-medium flex items-center justify-between text-left">
+          <div><p class="font-bold text-lg"><span class="text-2xl align-middle mr-1">${ic}</span>${cn}</p><p class="text-sm font-medium opacity-80 mt-0.5">${vi}</p></div>
+          ${on ? '<i class="fa-solid fa-circle-check text-teal-600 text-lg"></i>' : ''}</button>`;
+      }).join('');
+    }
+    function renderChips() {
+      $('chipWrap').classList.toggle('hidden', !(S.scope === 'single' || S.scope === 'multi'));
+      $('multiCtl').classList.toggle('hidden', S.scope !== 'multi');
+      $('chips').innerHTML = NUMS.map(n => {
+        const on = S.scope === 'single' ? S.lesson === n : S.multi.includes(n);
+        return `<button onclick="pickLesson(${n})" class="lift-sm py-2.5 rounded-xl text-sm font-bold ${on ? 'border-2 border-teal-600 bg-teal-50 text-teal-800 shadow-sm' : 'border border-slate-200 bg-white text-slate-700'}">Bài ${n}</button>`;
+      }).join('');
+      if (!$('rFrom').options.length) NUMS.forEach(n => { $('rFrom').add(new Option('Bài ' + n, n)); $('rTo').add(new Option('Bài ' + n, n)); });
+      $('scopeInfo').textContent = S.scope === 'single'
+        ? (S.lesson ? `已选 · Đã chọn: Bài ${S.lesson}` : '请选择一课 · Hãy chọn một bài')
+        : (S.multi.length ? `已选 · Đã chọn: ${S.multi.length} bài (${S.multi.slice().sort((a, b) => a - b).join(', ')})` : '请选择若干课，再按“开始” · Chọn các bài rồi bấm “Bắt đầu”');
+    }
+    function scopeLessons() { return S.scope === 'all' ? NUMS : S.scope === 'single' ? (S.lesson ? [S.lesson] : []) : S.scope === 'multi' ? S.multi.slice().sort((a, b) => a - b) : []; }
+    function canStart() { return !!S.mode && scopeLessons().length > 0 && (S.scope !== 'multi' || S.active); }
+    function stop() { S.active = false; renderIdle(); }
+    function pickMode(m) { S.mode = m; renderModes(); canStart() ? startSession() : (S.scope === 'multi' && S.active ? 0 : stop()); }
+    function pickScope(sc) {
+      S.scope = sc; renderScopes(); renderChips();
+      if (sc === 'multi') return stop();
+      canStart() ? startSession() : stop();
+    }
+    function pickLesson(n) {
+      if (S.scope === 'single') { S.lesson = n; renderChips(); canStart() ? startSession() : stop(); }
+      else { const i = S.multi.indexOf(n); i < 0 ? S.multi.push(n) : S.multi.splice(i, 1); renderChips(); }
+    }
+    function pickRange() {
+      const a = +$('rFrom').value, b = +$('rTo').value;
+      if (a > b) return notice('选择错误 · Lỗi chọn bài', 'Bài bắt đầu không được lớn hơn bài kết thúc nha bạn.');
+      S.multi = NUMS.filter(n => n >= a && n <= b); renderChips();
+    }
+
+    // ---------- Tạo câu hỏi ----------
+    // Gán dạng câu hỏi từ vựng: xoay vòng 4 dạng theo từng khối đã xáo trộn → trộn đều, ít lặp liền kề
+    function assignKinds(list) {
+      const kinds = ['vc', 'cv'];   // chỉ: nghĩa→chữ Trung, chữ Trung→nghĩa
+      let bag = [], prev = null;
+      return list.map(r => {
+        if (!bag.length) { bag = shuf(kinds); if (bag[bag.length - 1] === prev && bag.length > 1) bag.reverse(); }
+        const k = bag.pop(); prev = k; return { ...r, t: 'v', k };
+      });
+    }
+    function buildQs(mode, ls) {
+      const v = [], a = [];
+      ls.forEach(n => {
+        LBY[n].vocab.forEach((x, i) => x.vi && v.push({ l: n, i }));
+        LBY[n].sentences.forEach((x, i) => x.words.length > 1 && a.push({ l: n, i }));
+      });
+      if (mode === 'vocab') return assignKinds(shuf(v));
+      if (mode === 'typing') return shuf(v).map(r => ({ ...r, t: 't' }));
+      if (mode === 'arrange') return shuf(a).map(r => ({ ...r, t: 'a' }));
+      // Tổng hợp: mỗi từ chỉ ra 1 dạng (trắc nghiệm hoặc gõ), câu thì sắp xếp; xen kẽ, tránh lặp cùng dạng liên tiếp
+      const L = { v: [], t: [], a: shuf(a).map(r => ({ ...r, t: 'a' })) };
+      shuf(v).forEach(r => { const k = Math.random() < .5 ? 'v' : 't'; L[k].push({ ...r, t: k }); });
+      L.v = assignKinds(L.v);
+      // rải đều mỗi dạng theo vị trí tỉ lệ để 3 dạng xen kẽ suốt phiên (không dồn về cuối)
+      const out = [];
+      ['v', 't', 'a'].forEach(k => L[k].forEach((q, i) => out.push([(i + Math.random()) / L[k].length, q])));
+      out.sort((x, y) => x[0] - y[0]);
+      const res = out.map(x => x[1]);
+      for (let i = 1; i < res.length - 1; i++) if (res[i].t === res[i - 1].t && res[i + 1].t !== res[i].t) [res[i], res[i + 1]] = [res[i + 1], res[i]];
+      return res;
+    }
+    const item = r => r.t === 'a' ? LBY[r.l].sentences[r.i] : LBY[r.l].vocab[r.i];
+
+    function startSession(keep) {
+      const ls = scopeLessons();
+      if (!S.mode || !ls.length) return renderIdle();
+      const qs = buildQs(S.mode, ls);
+      if (!qs.length) return notice('提示 · Thông báo', 'Phạm vi này chưa có đủ dữ liệu cho dạng bài đã chọn. Bạn thử chọn lại nhé.');
+      const k = keep === true;
+      Object.assign(S, { qs, idx: 0, review: false, active: true, score: k ? S.score : 0, ans: k ? S.ans : 0, aw: k ? S.aw : 0, as: k ? S.as : 0, wrong: k ? S.wrong : [], done: k ? S.done : [] });
+      save(); showSlide(2); showExercise();
+      $('studyArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ---------- Panel (nằm trong Slide 2) ----------
+    function panel(html) {
+      $('exWrap').classList.add('hidden'); $('panel').classList.remove('hidden');
+      $('panel').innerHTML = html;
+    }
+    function renderIdle() { $('exWrap').classList.add('hidden'); $('panel').classList.add('hidden'); $('panel').innerHTML = ''; }
+    function showExercise() {
+      $('panel').classList.add('hidden'); $('exWrap').classList.remove('hidden');
+      showSlide(2); showQ();
+    }
+    function unitText() { return S.as > 0 && S.aw === 0 ? ['句子', 'câu'] : ['词', 'từ']; }
+
+    function finishQs() {
+      S.idx = S.qs.length; S.active = true;
+      if (HAS_TTS) speechSynthesis.cancel();
+      if (!S.done.includes(S.mode)) S.done.push(S.mode);
+      save(); showSlide(2);
+      const uv = unitText()[1];
+      panel(`<div class="space-y-5 animate-pop-in">
+        <div class="text-3xl">🌿</div>
+        <div><h3 class="text-xl md:text-2xl font-extrabold text-slate-800">这一部分完成啦！</h3><p class="text-sm md:text-base text-teal-600 font-medium">Bạn đã hoàn thành phần này! · 已复习 Đã ôn: ${S.ans} ${uv}</p></div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          ${MODES.map(([k, ic, , cn, vi]) => { const d = S.done.includes(k); return `<button onclick="continueWith('${k}')" class="lift relative px-3 py-4 rounded-xl text-center border-2 ${d ? 'border-emerald-300 bg-emerald-50/70 text-emerald-800' : 'border-teal-500 bg-teal-50/60 text-teal-800'} shadow-sm">
+            ${d ? '<span class="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] flex items-center justify-center"><i class="fa-solid fa-check"></i></span>' : ''}
+            <p class="text-2xl">${ic}</p><p class="font-bold text-sm mt-1">${cn}</p><p class="text-xs opacity-80">${vi}</p>
+            <p class="text-[11px] mt-1.5 font-semibold">${d ? '已完成 · Đã hoàn thành' : '下一部分 · Phần tiếp theo'}</p></button>`; }).join('')}
+        </div>
+        <div class="grid grid-cols-3 gap-3 pt-1">
+          <button onclick="changeLesson()" class="lift-sm py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold">📖 换一课<br>Đổi bài</button>
+          <button onclick="pauseSession()" class="lift-sm py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold">⏸️ 暂停<br>Tạm dừng</button>
+          <button onclick="endSession(false)" class="lift-sm py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold">🌙 结束<br>Kết thúc</button>
+        </div></div>`);
+    }
+    function continueWith(m) { S.mode = m; renderModes(); startSession(true); }
+    function changeLesson() {
+      S.active = false; clearSaved(); showSlide(2); renderIdle();
+      document.getElementById('scopes').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function pauseSession() {
+      if (HAS_TTS) speechSynthesis.cancel();
+      save();
+      panel(`<div class="space-y-5 max-w-sm mx-auto animate-pop-in">
+        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto shadow-inner">⏸️</div>
+        <div><h3 class="text-xl font-bold text-slate-800">稍作休息 · Nghỉ tay một chút nhé</h3></div>
+        <button onclick="S.idx>=S.qs.length?finishQs():showExercise()" class="lift-btn w-full py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-base shadow-lg shadow-teal-600/30">▶️ 继续复习<br><span class="text-xs font-semibold opacity-90">Tiếp tục ôn tập</span></button>
+        <div class="pt-3 border-t border-slate-200/80">
+          <button onclick="endSession(true)" class="lift-sm w-full py-3 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">🌙 结束本次复习<br>Tạm dừng &amp; kết thúc phiên</button>
+        </div>
+        <p class="text-xs text-teal-600 font-medium">Quay lại sau cũng được, tiến độ sẽ được lưu.<br>随时回来，进度都会保存。</p></div>`);
+    }
+
+    // ---------- Kết thúc phiên ----------
+    function endSession(keepSaved) {
+      if (!keepSaved) clearSaved(); else save();
+      S.active = false;
+      if (!S.ans) return goGift();
+      const [u, uv] = unitText(), n = S.wrong.length;
+      panel(`<div class="space-y-5 max-w-md mx-auto animate-pop-in">
+        <div class="text-3xl">🌙</div>
+        <div class="msg-box" style="min-height:6rem"><p class="msg-cn">今天复习了${S.ans}个${u}。</p><p class="msg-vi">Hôm nay bạn đã ôn ${S.ans} ${uv}.</p>
+          ${n ? `<p class="msg-cn mt-3" style="font-size:1.05rem">有${n}道题可以再看一遍。</p><p class="msg-vi">Có ${n} câu bạn có thể xem lại một lần nữa.</p>` : ''}</div>
+        ${n ? `<button onclick="startReview()" class="lift-sm w-full py-3 rounded-2xl bg-white border-2 border-teal-500 text-teal-800 font-bold text-sm">🔄 再复习错题<br><span class="text-xs font-semibold">Ôn lại câu sai</span></button>` : ''}
+        <button onclick="goGift()" class="lift-btn w-full py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-sm shadow-lg shadow-teal-600/30">🌙 结束，期待下次再见<br><span class="text-xs font-semibold opacity-90">Kết thúc, hẹn gặp lại lần sau</span></button></div>`);
+    }
+    function startReview() {
+      S.qs = shuf(S.wrong).map(r => ({ ...r })); S.wrong = []; S.idx = 0; S.review = true; S.active = true;
+      save(); showExercise();
+    }
+
+    // ---------- Hiển thị câu hỏi ----------
+    // Chọn 3 đáp án nhiễu: khác chữ/nghĩa/pinyin của đáp án đúng, không trùng nhau
+    function distractors(it, key) {
+      const seen = new Set([it[key]]), out = [];
+      for (const v of shuf(ALLV)) {
+        if (v.cn === it.cn || v.vi === it.vi || v.py === it.py || seen.has(v[key])) continue;
+        seen.add(v[key]); out.push(v); if (out.length === 3) break;
+      }
+      return out;
+    }
+    function optBtn(box, val, html, center, asText) {
+      const b = document.createElement('button');
+      b.className = 'opt-btn lift-sm p-4 rounded-2xl border-2 border-slate-200 bg-white font-medium text-base text-slate-700 shadow-sm ' + (center ? 'text-center' : 'text-left');
+      b.dataset.val = val; asText ? (b.textContent = html) : (b.innerHTML = html);
+      b.onclick = () => { box.querySelectorAll('.opt-btn').forEach(x => x.classList.remove('border-teal-600', 'bg-teal-50')); b.classList.add('border-teal-600', 'bg-teal-50'); S.sel = val; };
+      box.appendChild(b);
+    }
+    function showQ() {
+      const r = S.qs[S.idx];
+      if (!r) return finishQs();
+      if (HAS_TTS) speechSynthesis.cancel();
+      const it = item(r); S.tries = 0; S.sel = null;
+      const k = r.t === 'v' ? (r.k || 'cv') : null;
+      $('exModeTitle').textContent = S.review ? '重做错题 · Ôn lại câu sai' : titleOf(r);
+      $('exProgressCounter').textContent = `Câu ${S.idx + 1} · 第${S.idx + 1}题`;
+      $('exProgressBar').style.width = (S.idx / S.qs.length * 100) + '%';
+      $('qBadge').textContent = `Bài ${r.l} · 第${r.l}课`;
+      $('feedbackBox').className = 'hidden w-full max-w-3xl mx-auto rounded-2xl p-4 text-center text-base font-medium animate-pop-in';
+      const btn = $('btnCheckAnswer'); btn.textContent = '检查答案 · Kiểm tra đáp án'; btn.onclick = checkAnswer;
+      const canSkip = r.t === 't' && S.mode === 'mixed';
+      $('btnSkip').classList.toggle('hidden', !canSkip); $('btnSkip').classList.toggle('flex', canSkip);
+      const area = $('interactiveArea'); area.innerHTML = '';
+      const qc = $('qChinese'), qv = $('qVietnamese');
+      qv.className = 'text-sm text-slate-500 italic';
+      $('pyRow').classList.toggle('hidden', k !== 'cv');
+      qv.classList.toggle('hidden', !(r.t === 't' || k === 'vc' || k === 'lc' || k === 'lv'));
+      if (r.t === 'v') {
+        const box = document.createElement('div'); box.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4';
+        if (k === 'cv') {          // chữ Trung (kèm pinyin) → chọn nghĩa
+          qc.className = 'text-5xl md:text-6xl font-extrabold text-slate-800 tracking-wide'; qc.textContent = it.cn; $('qPinyin').textContent = it.py;
+          shuf([it, ...distractors(it, 'vi')]).forEach(o => optBtn(box, o.vi, o.vi, false, true));
+        } else if (k === 'vc') {   // nghĩa tiếng Việt → chọn chữ Trung (kèm pinyin)
+          qc.className = 'text-2xl md:text-3xl font-extrabold text-teal-700 leading-snug'; qc.textContent = it.vi;
+          qv.className = 'text-sm font-semibold text-slate-500 not-italic'; qv.textContent = 'Chọn từ tiếng Trung đúng · 选择正确的中文';
+          shuf([it, ...distractors(it, 'cn')]).forEach(o => optBtn(box, o.cn, `<span class="block text-2xl font-extrabold text-slate-800">${o.cn}</span><span class="block text-sm text-teal-600 font-medium mt-0.5">${o.py}</span>`, true));
+        } else {                   // nghe → chọn từ (lc) hoặc nghe → chọn nghĩa (lv); không bắt buộc biết chữ Hán
+          qc.className = 'text-2xl md:text-3xl font-extrabold text-slate-800';
+          qc.textContent = k === 'lc' ? '🎧 请听，选出正确的词' : '🎧 请听，选出正确的意思';
+          qv.className = 'text-sm font-semibold text-slate-500 not-italic';
+          qv.textContent = k === 'lc' ? 'Nghe và chọn từ đúng' : 'Nghe và chọn nghĩa đúng';
+          const say = () => speakZh(ttsText(it.cn));
+          const lb = document.createElement('button'); lb.id = 'btnListen';
+          lb.className = 'lift-btn mx-auto mb-2 px-7 py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-base shadow-md shadow-teal-600/25 flex items-center gap-2';
+          lb.innerHTML = '🔊 <span>Nghe lại <span class="font-semibold opacity-90">· 再听一遍</span></span>';
+          lb.onclick = say; area.appendChild(lb);
+          if (k === 'lc') shuf([it, ...distractors(it, 'cn')]).forEach(o => optBtn(box, o.cn, `<span class="block text-xl font-extrabold text-slate-800">${o.py}</span><span class="block text-sm text-slate-500 mt-0.5">${o.cn}</span>`, true));
+          else shuf([it, ...distractors(it, 'vi')]).forEach(o => optBtn(box, o.vi, o.vi, false, true));
+          setTimeout(say, 350);    // tự phát khi vào câu; bấm nút để nghe lại nhiều lần
+        }
+        area.appendChild(box);
+      } else if (r.t === 'a') {
+        qc.className = 'text-2xl md:text-3xl font-extrabold text-slate-800 leading-snug'; qc.textContent = it.vi;
+        const wrap = document.createElement('div'); wrap.className = 'space-y-4';
+        wrap.innerHTML = '<p class="text-center text-sm font-semibold text-teal-700">🧩 把拼音排成正确的句子 · Sắp xếp pinyin thành câu đúng</p>';
+        const slots = document.createElement('div'); slots.id = 'arrangeSlots';
+        slots.className = 'min-h-[64px] p-3 rounded-2xl bg-slate-100/80 border-2 border-dashed border-slate-300 flex flex-wrap gap-2 items-center';
+        const pool = document.createElement('div'); pool.className = 'flex flex-wrap gap-2.5 justify-center pt-2';
+        shuf(it.words).forEach(w => {
+          const c = document.createElement('button');
+          c.className = 'chip-btn lift-sm px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold text-slate-800 shadow-sm text-base';
+          c.textContent = w; c.onclick = () => (c.parentNode === pool ? slots : pool).appendChild(c);
+          pool.appendChild(c);
+        });
+        wrap.append(slots, pool); area.appendChild(wrap);
+      } else {
+        qc.className = 'text-2xl md:text-3xl font-extrabold text-slate-800 whitespace-nowrap'; qc.textContent = '请写出中文：';
+        qv.className = 'text-base font-semibold text-slate-500'; qv.textContent = 'Hãy viết từ tiếng Trung:';
+        const wrap = document.createElement('div'); wrap.className = 'space-y-3 text-center';
+        wrap.innerHTML = `<p class="text-sm text-slate-500 font-medium">Nghĩa tiếng Việt:</p><p class="text-2xl md:text-3xl font-extrabold text-teal-700 leading-snug" style="text-wrap:balance">${it.vi}</p>`;
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.id = 'typeInput'; inp.autocomplete = 'off'; inp.placeholder = '输入汉字 · Gõ chữ Hán...';
+        inp.className = 'w-full p-4 rounded-2xl border-2 border-slate-200 focus:border-teal-500 focus:outline-none text-center font-bold text-xl text-slate-800 shadow-inner';
+        inp.style.userSelect = 'text';
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('btnCheckAnswer').click(); } });
+        wrap.appendChild(inp); area.appendChild(wrap); setTimeout(() => inp.focus(), 50);
+      }
+    }
+
+    function fb(kind, cn, vi, alt) {
+      const b = $('feedbackBox');
+      const c = { ok: 'bg-emerald-100 text-emerald-800 border border-emerald-300', bad: 'bg-rose-100 text-rose-800 border border-rose-300', warn: 'bg-amber-100 text-amber-800 border border-amber-300' }[kind];
+      b.className = `w-full max-w-3xl mx-auto rounded-2xl p-4 text-center text-base font-medium animate-pop-in ${c}`;
+      $('feedbackChinese').textContent = cn; $('feedbackVietnamese').textContent = vi || '';
+      const a = $('feedbackAlt'); a.textContent = alt || ''; a.classList.toggle('hidden', !alt);
+    }
+    function answerLine(r, it) {
+      if (r.t === 'a') return it.py;
+      return `${it.cn} (${it.py})\n${it.vi}`;
+    }
+    function checkAnswer() {
+      const r = S.qs[S.idx], it = item(r); let ok = false, empty = false, alt = null;
+      if (r.t === 'v') {
+        const k = r.k || 'cv', key = (k === 'vc' || k === 'lc') ? it.cn : it.vi;
+        S.sel == null ? empty = true : ok = S.sel === key;
+      } else if (r.t === 'a') {
+        const u = [...$('arrangeSlots').children].map(c => c.textContent).join(' ');
+        if (!u) empty = true;
+        if (u === it.words.join(' ')) ok = true;
+        else { const a = (it.alts || []).find(x => x.words.join(' ') === u); if (a) { ok = true; alt = a; } }  // cách xếp khác cũng đúng
+      } else {
+        const v = $('typeInput').value, u = norm(v);
+        if (!u) empty = true;
+        else ok = [it.cn, stripParen(it.cn)].some(a => norm(a) === u) || pyNorm(it.py) === pyNorm(v);
+      }
+      if (empty) return fb('warn', '请先作答 · Hãy trả lời trước nhé', '');
+      S.tries++;
+      if (S.tries === 1) {
+        S.ans++; r.t === 'a' ? S.as++ : S.aw++;
+        if (ok) S.score += 10;
+        else if (!S.wrong.some(w => w.t === r.t && w.l === r.l && w.i === r.i)) S.wrong.push({ l: r.l, i: r.i, t: r.t, k: r.k });
+      }
+      if (ok) {
+        SFX.ok();
+        if (alt) fb('ok', '✓ 正确！ · Chính xác!', '', `这样说也对 · Cách nói này cũng đúng\n原句 · Câu gốc: ${it.cn}\n${it.py}`);
+        else fb('ok', '✓ 正确！ · Chính xác!', answerLine(r, it));
+        toNext();
+      }
+      else if (S.tries < 2) {
+        SFX.bad(); fb('bad', '再试一次！ · Thử lại một lần nhé!', '');
+        if (r.t === 'v') { const b = [...document.querySelectorAll('.opt-btn')].find(x => x.dataset.val === S.sel); if (b) b.classList.add('opacity-40', 'pointer-events-none'); S.sel = null; }
+      } else { SFX.bad(); fb('bad', '答案 · Đáp án', answerLine(r, it)); toNext(); }
+      save();
+    }
+    function toNext() {
+      const b = $('btnCheckAnswer'); b.textContent = '下一题 · Câu tiếp theo ➔'; b.onclick = nextQuestion;
+      $('btnSkip').classList.add('hidden'); $('btnSkip').classList.remove('flex');
+    }
+    function nextQuestion() { S.idx++; save(); showQ(); }
+    // Bỏ qua câu gõ chữ Hán (không tính điểm, không tính vào câu sai)
+    function skipQuestion() { S.idx++; save(); showQ(); }
+
+    function speakCurrentText() {
+      const r = S.qs[S.idx]; if (!r) return;
+      const it = item(r);
+      speakZh(ttsText(it.cn || it.words.join('')));
+    }
+    function notice(title, desc) {
+      $('noticeTitle').textContent = title; $('noticeDesc').textContent = desc; $('modalNotice').classList.remove('hidden');
+    }
+
+    // ---------- Slide 3: hộp quà ----------
+    const GIFT_SVG = `<svg viewBox="0 0 120 130" class="gsvg"><g><rect x="14" y="60" width="92" height="62" rx="8" fill="#ef4444"/><rect x="52" y="60" width="16" height="62" fill="#fcd34d"/></g>
+      <g class="glid"><rect x="8" y="40" width="104" height="24" rx="8" fill="#dc2626"/><rect x="52" y="40" width="16" height="24" fill="#fbbf24"/>
+      <g class="gbow"><ellipse cx="46" cy="32" rx="16" ry="11" fill="#fbbf24" transform="rotate(-20 46 32)"/><ellipse cx="74" cy="32" rx="16" ry="11" fill="#fbbf24" transform="rotate(20 74 32)"/><circle cx="60" cy="38" r="7" fill="#f59e0b"/></g></g></svg>
+      <span class="spark text-sm" style="left:-4px;top:8px">✨</span><span class="spark text-xs" style="right:-2px;top:30px;animation-delay:-1.3s">✨</span>`;
+    let giftOpened = false;
+    function buildGifts() {
+      giftOpened = false;
+      $('quoteArea').classList.remove('show');
+      $('giftGrid').innerHTML = [0, 1, 2].map(i => `<div class="gift" style="animation-delay:${-i * .8}s" onclick="openGift(this)" onmouseenter="hoverGift()">${GIFT_SVG}</div>`).join('');
+    }
+    function hoverGift() { if (!giftOpened) SFX.hover(); }
+    function openGift(el) {
+      if (giftOpened) return; giftOpened = true;
+      [...$('giftGrid').children].forEach(g => g !== el && g.classList.add('dim'));
+      el.classList.add('shaking'); SFX.shake();
+      const q = pickUnseen(QUOTES, QKEY);
+      $('quoteCn').textContent = q.cn; $('quoteVi').textContent = q.vi;
+      setTimeout(() => {
+        el.classList.remove('shaking'); el.classList.add('opened'); SFX.open(); SFX.ting();
+        for (let i = 0; i < 10; i++) {
+          const s = document.createElement('span'); s.className = 'burst text-lg'; s.textContent = i % 2 ? '✨' : '🌟';
+          const a = Math.PI * 2 * i / 10; s.style.setProperty('--dx', Math.cos(a) * 70 + 'px'); s.style.setProperty('--dy', Math.sin(a) * 70 - 20 + 'px');
+          el.appendChild(s); setTimeout(() => s.remove(), 1000);
+        }
+        if (window.confetti) confetti({ particleCount: 60, spread: 60, origin: { y: 0.55 } });   // pháo giấy lúc mở hộp: giữ nguyên
+      }, 520);
+      setTimeout(() => $('quoteArea').classList.add('show'), 1100);
+    }
+
+    // ---------- Khởi động ----------
+    LS.del('hsk1_progress_saved'); // phiên cũ ở định dạng cũ, không tương thích
+    soundIcon(); showWelcome(true);
+  </script>
 </body>
 </html>
